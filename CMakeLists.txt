@@ -1,8 +1,10 @@
 cmake_minimum_required(VERSION 3.21)
 project(imgmanip LANGUAGES HIP)
 
+add_executable(${CMAKE_PROJECT_NAME} "")
+
 set(SOURCE_DIR "src")
-add_executable(${CMAKE_PROJECT_NAME} ${SOURCE_DIR}/main.hip)
+add_subdirectory(${SOURCE_DIR})
 
 set (IMGS_DIR "imgs")
 add_custom_target(link_images ALL
