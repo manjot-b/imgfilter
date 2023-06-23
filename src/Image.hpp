@@ -12,7 +12,7 @@ class Image
 
 	public:
 		Image(const std::string& filename);
-		Image(const std::string& filename, uchar* imageData, int width, int height, int components);
+		Image(const std::string& filename, const uchar* imageData, int width, int height, int components);
 		~Image();
 
 		const std::string& GetFilename();
