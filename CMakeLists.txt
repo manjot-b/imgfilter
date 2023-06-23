@@ -6,6 +6,10 @@ add_executable(${CMAKE_PROJECT_NAME} "")
 set(SOURCE_DIR "src")
 add_subdirectory(${SOURCE_DIR})
 
+set(DEPENDENCIES_DIR "deps")
+add_subdirectory(${DEPENDENCIES_DIR})
+target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${DEPENDENCIES_DIR})
+
 get_target_property(SOURCE_FILES ${CMAKE_PROJECT_NAME} SOURCES)
 set_source_files_properties(${SOURCE_FILES} PROPERTIES LANGUAGE HIP)
 

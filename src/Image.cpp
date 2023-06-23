@@ -2,7 +2,7 @@
 #include <cstring>
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+#include <stb/stb_image.h>
 
 Image::Image(const std::string& filename)
 	: m_filename(filename), m_imageData(nullptr)
