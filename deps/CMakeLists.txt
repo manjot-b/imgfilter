@@ -1,4 +1,7 @@
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
+	glad/glad.c
+	glad/glad.h
+	KHR/khrplatform.h
 	stb/stb_image.h
 	stb/stb_image_write.h
 )
