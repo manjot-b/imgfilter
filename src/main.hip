@@ -1,4 +1,8 @@
 #include <iostream>
+
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
@@ -54,15 +58,44 @@ int main(int argc, char* argv[])
 
 	gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO();
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplOpenGL3_Init("#version 330");
+
+	bool showImGuiDemo = true;
 	while(glfwWindowShouldClose(window) == false)
 	{
 		glfwPollEvents();
 
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+
+		if (showImGuiDemo == true)
+		{
+			// show ImGui demo
+			ImGui::ShowDemoWindow(&showImGuiDemo);
+		}
+
+		ImGui::Render();
 		GLsizei displayX, displayY;
 		glfwGetFramebufferSize(window, &displayX, &displayY);
 		glViewport(0, 0, displayX, displayY);
 		glClearColor(0.3, 0.2, 0.2, 1);
 		glClear(GL_COLOR_BUFFER_BIT);
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
 		glfwSwapBuffers(window);
 	}
+
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
+
+	glfwDestroyWindow(window);
+	glfwTerminate();
 }
