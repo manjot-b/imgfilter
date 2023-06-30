@@ -73,6 +73,7 @@ void MainWindow::Render()
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 
+	displayDockingSpace();
 	if (showImGuiDemo == true)
 	{
 		// show ImGui demo
@@ -102,6 +103,36 @@ void MainWindow::Render()
 	glfwSwapBuffers(m_window);
 }
 
+void MainWindow::displayDockingSpace()
+{
+    ImGuiDockNodeFlags dockSpaceFlags = ImGuiDockNodeFlags_None;
+
+    // We are using the ImGuiWindowFlags_NoDocking flag to make the parent window not dockable into,
+    // because it would be confusing to have two docking targets within each others.
+    ImGuiWindowFlags windowFlags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
+	const ImGuiViewport* viewport = ImGui::GetMainViewport();
+	ImGui::SetNextWindowPos(viewport->WorkPos);
+	ImGui::SetNextWindowSize(viewport->WorkSize);
+	ImGui::SetNextWindowViewport(viewport->ID);
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, .0f);
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, .0f);
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(.0f, .0f));
+	windowFlags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+	windowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+
+    ImGui::Begin("DockSpaceWindow", nullptr, windowFlags);
+	ImGui::PopStyleVar(3);
+
+    // Submit the DockSpace
+    ImGuiIO& io = ImGui::GetIO();
+    if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
+    {
+        ImGuiID dockSpaceID = ImGui::GetID("MyDockSpace");
+        ImGui::DockSpace(dockSpaceID, ImVec2(0.0f, 0.0f), dockSpaceFlags);
+    }
+
+    ImGui::End();
+}
 void MainWindow::ErrorCallback(int error, const char* description)
 {
 	std::cerr << "GLFW Error " << error << ": " << description << '\n';

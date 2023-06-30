@@ -9,6 +9,8 @@ class MainWindow
 		static void ErrorCallback(int error, const char* description);
 		GLFWwindow* m_window;
 
+		void displayDockingSpace();
+
 	public:
 		MainWindow(const MainWindow&) = delete;
 		void operator=(const MainWindow&) = delete;
