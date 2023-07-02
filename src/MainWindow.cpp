@@ -17,7 +17,7 @@ MainWindow& MainWindow::Get()
 }
 
 MainWindow::MainWindow() :
-	m_canvasWindowName("Canvas"), m_previewWindowName("Preview"), m_profilerWindowName("Profiler")
+	IWindow("DockSpaceWindow"), m_canvasWindowName("Canvas"), m_previewWindowName("Preview"), m_profilerWindowName("Profiler")
 {
 	glfwSetErrorCallback(MainWindow::ErrorCallback);
 
@@ -129,7 +129,7 @@ void MainWindow::displayDockingSpace()
 	windowFlags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
 	windowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 
-    ImGui::Begin("DockSpaceWindow", nullptr, windowFlags);
+    ImGui::Begin(m_windowName.c_str(), nullptr, windowFlags);
 	ImGui::PopStyleVar(3);
 
     // Submit the DockSpace

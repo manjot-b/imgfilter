@@ -2,9 +2,11 @@
 
 #include <imgui.h>
 
+#include "IWindow.hpp"
+
 class GLFWwindow;
 
-class MainWindow
+class MainWindow : public IWindow
 {
 	private:
 		MainWindow();
@@ -25,7 +27,7 @@ class MainWindow
 		void operator=(const MainWindow&) = delete;
 
 		static MainWindow& Get();
-		void Render();
+		virtual void Render() override;
 		bool ReadyToClose();
 		void Close();
 };
