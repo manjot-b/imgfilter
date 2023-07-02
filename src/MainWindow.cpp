@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include <imgui.h>
+#include <imgui_internal.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 #include <glad/glad.h>
@@ -15,7 +16,8 @@ MainWindow& MainWindow::Get()
 	return mainWindow;
 }
 
-MainWindow::MainWindow()
+MainWindow::MainWindow() :
+	m_canvasWindowName("Canvas"), m_previewWindowName("Preview"), m_profilerWindowName("Profiler")
 {
 	glfwSetErrorCallback(MainWindow::ErrorCallback);
 
@@ -66,7 +68,6 @@ void MainWindow::Close()
 
 void MainWindow::Render()
 {
-	bool showImGuiDemo = true;
 	glfwPollEvents();
 
 	ImGui_ImplOpenGL3_NewFrame();
@@ -74,6 +75,11 @@ void MainWindow::Render()
 	ImGui::NewFrame();
 
 	displayDockingSpace();
+	displayCanvas();
+	displayImagePreview();
+	displayProfiler();
+
+	bool showImGuiDemo = false;
 	if (showImGuiDemo == true)
 	{
 		// show ImGui demo
@@ -105,18 +111,21 @@ void MainWindow::Render()
 
 void MainWindow::displayDockingSpace()
 {
-    ImGuiDockNodeFlags dockSpaceFlags = ImGuiDockNodeFlags_None;
+    ImGuiDockNodeFlags dockSpaceFlags = ImGuiDockNodeFlags_DockSpace;
 
     // We are using the ImGuiWindowFlags_NoDocking flag to make the parent window not dockable into,
     // because it would be confusing to have two docking targets within each others.
     ImGuiWindowFlags windowFlags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
 	const ImGuiViewport* viewport = ImGui::GetMainViewport();
+
 	ImGui::SetNextWindowPos(viewport->WorkPos);
 	ImGui::SetNextWindowSize(viewport->WorkSize);
 	ImGui::SetNextWindowViewport(viewport->ID);
+
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, .0f);
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, .0f);
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(.0f, .0f));
+
 	windowFlags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
 	windowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 
@@ -124,15 +133,64 @@ void MainWindow::displayDockingSpace()
 	ImGui::PopStyleVar(3);
 
     // Submit the DockSpace
-    ImGuiIO& io = ImGui::GetIO();
-    if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
-    {
-        ImGuiID dockSpaceID = ImGui::GetID("MyDockSpace");
-        ImGui::DockSpace(dockSpaceID, ImVec2(0.0f, 0.0f), dockSpaceFlags);
+	ImGuiID dockSpaceID = ImGui::GetID("MyDockSpace");
+	ImGui::DockSpace(dockSpaceID, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None);
+
+	// On start up dock the windows to their starting location
+    static bool firstTimeDocking = true;
+    if (firstTimeDocking) {
+        firstTimeDocking = false;
+        ImGui::DockBuilderRemoveNode(dockSpaceID);
+        ImGui::DockBuilderAddNode(dockSpaceID, dockSpaceFlags);
+        ImGui::DockBuilderSetNodeSize(dockSpaceID, viewport->Size);
+
+        ImGuiID leftDockID = ImGui::DockBuilderSplitNode(dockSpaceID, ImGuiDir_Left, 0.2f, nullptr, &dockSpaceID);
+        ImGuiID downDockID;
+		ImGuiID upDockID = ImGui::DockBuilderSplitNode(dockSpaceID, ImGuiDir_Up, 0.75f, nullptr, &downDockID);
+
+        ImGui::DockBuilderDockWindow(m_canvasWindowName, upDockID);
+        ImGui::DockBuilderDockWindow(m_previewWindowName, downDockID);
+        ImGui::DockBuilderDockWindow(m_profilerWindowName, leftDockID);
+
+        ImGui::DockBuilderFinish(dockSpaceID);
     }
 
     ImGui::End();
 }
+
+void MainWindow::displayCanvas()
+{
+	ImGuiWindowFlags windowFlags = ImGuiWindowFlags_None;
+	ImGui::Begin(m_canvasWindowName, nullptr, windowFlags);
+
+	ImGui::Text("some text");
+	ImGui::Button("a button");
+
+	ImGui::End();
+}
+
+void MainWindow::displayImagePreview()
+{
+	ImGuiWindowFlags windowFlags = ImGuiWindowFlags_None;
+	ImGui::Begin(m_previewWindowName, nullptr, windowFlags);
+
+	ImGui::Text("some text");
+	ImGui::Button("a button");
+
+	ImGui::End();
+}
+
+void MainWindow::displayProfiler()
+{
+	ImGuiWindowFlags windowFlags = ImGuiWindowFlags_None;
+	ImGui::Begin(m_profilerWindowName, nullptr, windowFlags);
+
+	ImGui::Text("some text");
+	ImGui::Button("a button");
+
+	ImGui::End();
+}
+
 void MainWindow::ErrorCallback(int error, const char* description)
 {
 	std::cerr << "GLFW Error " << error << ": " << description << '\n';
