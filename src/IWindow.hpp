@@ -11,6 +11,8 @@ class IWindow
 		 */
 		virtual void Render() = 0;
 
+		const char* GetWindowName() { return m_windowName.c_str(); }
+
 	protected:
 		IWindow(const std::string& windowName) :
 			m_windowName(windowName) {}

@@ -1,8 +1,13 @@
 #pragma once
 
 #include <imgui.h>
+#include <memory>
+#include <vector>
 
 #include "IWindow.hpp"
+#include "CanvasWindow.hpp"
+#include "PreviewWindow.hpp"
+#include "ProfilerWindow.hpp"
 
 class GLFWwindow;
 
@@ -13,14 +18,13 @@ class MainWindow : public IWindow
 		static void ErrorCallback(int error, const char* description);
 		GLFWwindow* m_window;
 
-		const char* m_canvasWindowName;
-		const char* m_previewWindowName;
-		const char* m_profilerWindowName;
+		std::shared_ptr<CanvasWindow> m_canvasWindow;
+		std::shared_ptr<PreviewWindow> m_previewWindow;
+		std::shared_ptr<ProfilerWindow> m_profilerWindow;
+
+		std::vector<std::shared_ptr<IWindow>> m_windows;
 
 		void displayDockingSpace();
-		void displayCanvas();
-		void displayImagePreview();
-		void displayProfiler();
 
 	public:
 		MainWindow(const MainWindow&) = delete;

@@ -17,8 +17,15 @@ MainWindow& MainWindow::Get()
 }
 
 MainWindow::MainWindow() :
-	IWindow("DockSpaceWindow"), m_canvasWindowName("Canvas"), m_previewWindowName("Preview"), m_profilerWindowName("Profiler")
+	IWindow("DockSpaceWindow"),
+	m_canvasWindow(std::make_shared<CanvasWindow>()),
+	m_previewWindow(std::make_shared<PreviewWindow>()),
+	m_profilerWindow(std::make_shared<ProfilerWindow>())
 {
+	m_windows.push_back(std::static_pointer_cast<IWindow>(m_canvasWindow));
+	m_windows.push_back(std::static_pointer_cast<IWindow>(m_previewWindow));
+	m_windows.push_back(std::static_pointer_cast<IWindow>(m_profilerWindow));
+
 	glfwSetErrorCallback(MainWindow::ErrorCallback);
 
 	if (glfwInit() == false)
@@ -53,7 +60,6 @@ MainWindow::MainWindow() :
 
 	ImGui_ImplGlfw_InitForOpenGL(m_window, true);
 	ImGui_ImplOpenGL3_Init("#version 330");
-
 }
 
 void MainWindow::Close()
@@ -75,9 +81,11 @@ void MainWindow::Render()
 	ImGui::NewFrame();
 
 	displayDockingSpace();
-	displayCanvas();
-	displayImagePreview();
-	displayProfiler();
+
+	for (auto window : m_windows)
+	{
+		window->Render();
+	}
 
 	bool showImGuiDemo = false;
 	if (showImGuiDemo == true)
@@ -148,47 +156,14 @@ void MainWindow::displayDockingSpace()
         ImGuiID downDockID;
 		ImGuiID upDockID = ImGui::DockBuilderSplitNode(dockSpaceID, ImGuiDir_Up, 0.75f, nullptr, &downDockID);
 
-        ImGui::DockBuilderDockWindow(m_canvasWindowName, upDockID);
-        ImGui::DockBuilderDockWindow(m_previewWindowName, downDockID);
-        ImGui::DockBuilderDockWindow(m_profilerWindowName, leftDockID);
+        ImGui::DockBuilderDockWindow(m_canvasWindow->GetWindowName(), upDockID);
+        ImGui::DockBuilderDockWindow(m_previewWindow->GetWindowName(), downDockID);
+        ImGui::DockBuilderDockWindow(m_profilerWindow->GetWindowName(), leftDockID);
 
         ImGui::DockBuilderFinish(dockSpaceID);
     }
 
     ImGui::End();
-}
-
-void MainWindow::displayCanvas()
-{
-	ImGuiWindowFlags windowFlags = ImGuiWindowFlags_None;
-	ImGui::Begin(m_canvasWindowName, nullptr, windowFlags);
-
-	ImGui::Text("some text");
-	ImGui::Button("a button");
-
-	ImGui::End();
-}
-
-void MainWindow::displayImagePreview()
-{
-	ImGuiWindowFlags windowFlags = ImGuiWindowFlags_None;
-	ImGui::Begin(m_previewWindowName, nullptr, windowFlags);
-
-	ImGui::Text("some text");
-	ImGui::Button("a button");
-
-	ImGui::End();
-}
-
-void MainWindow::displayProfiler()
-{
-	ImGuiWindowFlags windowFlags = ImGuiWindowFlags_None;
-	ImGui::Begin(m_profilerWindowName, nullptr, windowFlags);
-
-	ImGui::Text("some text");
-	ImGui::Button("a button");
-
-	ImGui::End();
 }
 
 void MainWindow::ErrorCallback(int error, const char* description)
