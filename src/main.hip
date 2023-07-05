@@ -1,6 +1,5 @@
 #include <iostream>
 
-#include "Image.hpp"
 #include "MainWindow.hpp"
 
 int main(int argc, char* argv[])
@@ -11,20 +10,17 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 
+	// Create the main window so the the GLFW and OpenGL contexts
+	// get created before using them.
+	MainWindow& mainWindow = MainWindow::Get();
+
 	std::string imageFilename(argv[1]);
 	std::cout << "Reading in " << imageFilename << '\n';
-
-	Image origImage(imageFilename);
-
-	if (origImage.GetData() == nullptr)
+	if (mainWindow.LoadImage(imageFilename) == false)
 	{
-		std::cerr << "Error: Could not read image " << origImage.GetFilename() << '\n';	
-		return 1;
+		std::cerr << "Error: Could not read image " << imageFilename << '\n';	
 	}
 
-	origImage.PrintInfo();
-
-	MainWindow& mainWindow = MainWindow::Get();
 	while(mainWindow.ReadyToClose() == false)
 	{
 		mainWindow.Render();

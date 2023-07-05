@@ -2,11 +2,14 @@
 
 #include <imgui.h>
 
-PreviewWindow::PreviewWindow() : IWindow("Preview") {}
+PreviewWindow::PreviewWindow() :
+	IWindow("Preview"),
+	m_thumbnailWidth(128),
+	m_thumbnailHeight(128)
+{}
 
 void PreviewWindow::Render()
 {
-
 	ImGuiWindowFlags windowFlags = ImGuiWindowFlags_None;
 	ImGui::Begin(m_windowName.c_str(), nullptr, windowFlags);
 

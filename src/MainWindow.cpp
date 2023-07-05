@@ -175,3 +175,19 @@ bool MainWindow::ReadyToClose()
 {
 	return glfwWindowShouldClose(m_window);
 }
+
+bool MainWindow::LoadImage(const std::string& filepath)
+{
+	m_originalImage = std::make_shared<Image>(filepath);
+
+	if (m_originalImage->GetData() == nullptr)
+	{
+		return false;
+	}
+
+	m_originalImage->PrintInfo();
+
+	m_canvasWindow->SetImage(m_originalImage->GetTextureID());
+
+	return true;
+}
