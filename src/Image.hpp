@@ -22,13 +22,13 @@ class Image
 		Image(const std::string& filename, const uchar* imageData, int width, int height, int components);
 		~Image();
 
-		const std::string& GetFilename();
-		const uchar* GetData();
-		int GetWidth();
-		int GetHeight();
-		int GetComponents();
-		GLuint GetTextureID();
-		void PrintInfo();
-		void Write();
-		void Write(const std::string& filename);
+		const std::string& GetFilename() const;
+		const uchar* GetData() const;
+		int GetWidth() const;
+		int GetHeight() const;
+		int GetComponents() const;
+		GLuint GetTextureID() const;
+		void PrintInfo() const;
+		void Write() const;
+		void Write(const std::string& filename) const;
 };

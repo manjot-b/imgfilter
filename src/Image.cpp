@@ -76,19 +76,19 @@ void Image::createOpenGLTexture()
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-const std::string& Image::GetFilename() { return m_filename; }
+const std::string& Image::GetFilename() const { return m_filename; }
 
-const uchar* Image::GetData() { return m_imageData; }
+const uchar* Image::GetData() const { return m_imageData; }
 
-int Image::GetWidth() { return m_width; }
+int Image::GetWidth() const { return m_width; }
 
-int Image::GetHeight() { return m_height; }
+int Image::GetHeight() const { return m_height; }
 
-int Image::GetComponents() { return m_components; }
+int Image::GetComponents() const { return m_components; }
 
-GLuint Image::GetTextureID() { return m_textureID; }
+GLuint Image::GetTextureID() const { return m_textureID; }
 
-void Image::PrintInfo()
+void Image::PrintInfo() const
 {
 	std::cout << "width: " << m_width << " height: " << m_height << " color: ";
 	switch(m_components)
@@ -107,12 +107,12 @@ void Image::PrintInfo()
 	std::cout << '\n';
 }
 
-void Image::Write()
+void Image::Write() const
 {
 	Write(m_filename);
 }
 
-void Image::Write(const std::string& filename)
+void Image::Write(const std::string& filename) const
 {
 	//TODO: Implement
 }
