@@ -187,7 +187,7 @@ bool MainWindow::LoadImage(const std::string& filepath)
 
 	m_originalImage->PrintInfo();
 
-	m_canvasWindow->SetImage(m_originalImage->GetTextureID());
+	m_canvasWindow->SetImage(m_originalImage);
 
 	return true;
 }

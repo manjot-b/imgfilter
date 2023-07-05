@@ -1,18 +1,22 @@
 #pragma once
 
-#include <glad/glad.h>
+#include <memory>
+#include <imgui.h>
 
+#include "Image.hpp"
 #include "IWindow.hpp"
 
 class CanvasWindow : public IWindow
 {
 	private:
-		GLuint m_activeTextureID;
-		int m_canvasWidth;
-		int m_canvasHeight;
+		std::shared_ptr<const Image> m_activeImage;
+		const int m_maxWidth;
+		const int m_maxHeight;
+
+		ImVec2 calcCanvasSize();
 
 	public:
 		CanvasWindow();
 		virtual void Render() override;	
-		void SetImage(GLuint textureID);
+		void SetImage(std::shared_ptr<const Image> image);
 };

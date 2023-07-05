@@ -5,8 +5,8 @@
 
 CanvasWindow::CanvasWindow() :
 	IWindow("Canvas"),
-	m_canvasWidth(600),
-	m_canvasHeight(800)
+	m_maxWidth(800),
+	m_maxHeight(450)
 {}
 
 void CanvasWindow::Render()
@@ -18,12 +18,36 @@ void CanvasWindow::Render()
 	ImGui::Text("some text in canvas");
 	ImGui::Button("a button in canvas");
 
-	if (m_activeTextureID != 0)
+	if (m_activeImage != nullptr && m_activeImage->GetTextureID() != 0)
 	{
-		ImGui::Image(reinterpret_cast<void*>(m_activeTextureID), ImVec2(m_canvasWidth, m_canvasHeight));
+		ImVec2 canvasSize = calcCanvasSize();
+		ImGui::Image(reinterpret_cast<void*>(m_activeImage->GetTextureID()), canvasSize);
 	}
 
 	ImGui::End();
 }
 
-void CanvasWindow::SetImage(GLuint textureID) { m_activeTextureID = textureID; }
+void CanvasWindow::SetImage(std::shared_ptr<const Image> image) { m_activeImage = image; }
+
+ImVec2 CanvasWindow::calcCanvasSize()
+{
+	float canvasRatio = (float)m_maxWidth / m_maxHeight;	
+	float imageRatio = (float)m_activeImage->GetWidth() / m_activeImage->GetHeight();
+
+	ImVec2 size(0, 0);
+	float scale = 1.f;
+
+	if (imageRatio > canvasRatio)
+	{
+		scale = (float)m_maxWidth / m_activeImage->GetWidth();
+	}
+	else
+	{
+		scale = (float)m_maxHeight / m_activeImage->GetHeight();
+	}
+
+	size.x = m_activeImage->GetWidth() * scale;
+	size.y = m_activeImage->GetHeight() * scale;
+
+	return size;
+}
