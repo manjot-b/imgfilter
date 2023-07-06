@@ -36,5 +36,7 @@ class MainWindow : public IWindow
 		virtual void Render() override;
 		bool ReadyToClose();
 		void Close();
-		bool LoadImage(const std::string& filepath);
+		std::shared_ptr<CanvasWindow> GetCanvasWindow();
+		std::shared_ptr<PreviewWindow> GetPreviewWindow();
+		std::shared_ptr<ProfilerWindow> GetProfilerWindow();
 };

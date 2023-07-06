@@ -1,6 +1,44 @@
+#include "App.hpp"
+
 #include <iostream>
 
-#include "MainWindow.hpp"
+App::App() : m_mainWindow(MainWindow::Get())
+{
+	// Create the main window so the the GLFW and OpenGL contexts
+	// get created before using them.
+}
+
+App& App::Get()
+{
+	static App app;
+	return app;
+}
+
+void App::Run()
+{
+	while(m_mainWindow.ReadyToClose() == false)
+	{
+		m_mainWindow.Render();
+	}
+
+	m_mainWindow.Close();
+}
+
+bool App::LoadImage(const std::string& filepath)
+{
+	m_originalImage = std::make_shared<Image>(filepath);
+
+	if (m_originalImage->GetData() == nullptr)
+	{
+		return false;
+	}
+
+	m_originalImage->PrintInfo();
+
+	m_mainWindow.GetCanvasWindow()->SetImage(m_originalImage);
+
+	return true;
+}
 
 int main(int argc, char* argv[])
 {
@@ -10,21 +48,16 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 
-	// Create the main window so the the GLFW and OpenGL contexts
+	// Create the app so the the GLFW and OpenGL contexts
 	// get created before using them.
-	MainWindow& mainWindow = MainWindow::Get();
+	App& app = App::Get();
 
 	std::string imageFilename(argv[1]);
 	std::cout << "Reading in " << imageFilename << '\n';
-	if (mainWindow.LoadImage(imageFilename) == false)
+	if (app.LoadImage(imageFilename) == false)
 	{
 		std::cerr << "Error: Could not read image " << imageFilename << '\n';	
 	}
 
-	while(mainWindow.ReadyToClose() == false)
-	{
-		mainWindow.Render();
-	}
-
-	mainWindow.Close();
+	app.Run();
 }

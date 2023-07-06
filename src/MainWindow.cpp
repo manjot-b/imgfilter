@@ -176,18 +176,8 @@ bool MainWindow::ReadyToClose()
 	return glfwWindowShouldClose(m_window);
 }
 
-bool MainWindow::LoadImage(const std::string& filepath)
-{
-	m_originalImage = std::make_shared<Image>(filepath);
+std::shared_ptr<CanvasWindow> MainWindow::GetCanvasWindow() { return m_canvasWindow; }
 
-	if (m_originalImage->GetData() == nullptr)
-	{
-		return false;
-	}
+std::shared_ptr<PreviewWindow> MainWindow::GetPreviewWindow() { return m_previewWindow; }
 
-	m_originalImage->PrintInfo();
-
-	m_canvasWindow->SetImage(m_originalImage);
-
-	return true;
-}
+std::shared_ptr<ProfilerWindow> MainWindow::GetProfilerWindow() { return m_profilerWindow; }
