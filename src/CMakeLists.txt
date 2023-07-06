@@ -1,10 +1,10 @@
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
+	App.cpp
 	CanvasWindow.cpp
 	CanvasWindow.hpp
 	Image.cpp
 	Image.hpp
 	IWindow.hpp
-	main.hip
 	MainWindow.cpp
 	MainWindow.hpp
 	PreviewWindow.cpp
