@@ -12,6 +12,7 @@ class CanvasWindow : public IWindow
 		std::shared_ptr<const Image> m_activeImage;
 		const int m_maxWidth;
 		const int m_maxHeight;
+		ImVec2 m_windowPadding;
 
 		ImVec2 calcCanvasSize();
 
