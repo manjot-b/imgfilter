@@ -157,8 +157,8 @@ void MainWindow::displayDockingSpace()
 		ImGuiID upDockID = ImGui::DockBuilderSplitNode(dockSpaceID, ImGuiDir_Up, 0.75f, nullptr, &downDockID);
 
         ImGui::DockBuilderDockWindow(m_canvasWindow->GetWindowName(), upDockID);
-        ImGui::DockBuilderDockWindow(m_previewWindow->GetWindowName(), downDockID);
-        ImGui::DockBuilderDockWindow(m_profilerWindow->GetWindowName(), leftDockID);
+        ImGui::DockBuilderDockWindow(m_previewWindow->GetWindowName(), leftDockID);
+        ImGui::DockBuilderDockWindow(m_profilerWindow->GetWindowName(), downDockID);
 
         ImGui::DockBuilderFinish(dockSpaceID);
     }
