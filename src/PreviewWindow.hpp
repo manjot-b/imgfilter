@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <vector>
+#include <imgui.h>
 
 #include "Image.hpp"
 #include "IWindow.hpp"
@@ -18,9 +19,11 @@ struct Thumbnail
 class PreviewWindow : public IWindow
 {
 	private:
-		int m_thumbnailWidth;
-		int m_thumbnailHeight;
+		int m_maxThumbnailWidth;
+		int m_maxThumbnailHeight;
 		std::vector<Thumbnail> m_thumbnails;
+
+		ImVec2 calcThumbnailSize(const Thumbnail& thumbnail);
 
 	public:
 		PreviewWindow();
