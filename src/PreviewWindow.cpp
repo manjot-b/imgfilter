@@ -1,4 +1,5 @@
 #include "PreviewWindow.hpp"
+#include "MainWindow.hpp"
 
 PreviewWindow::PreviewWindow() :
 	IWindow("Preview"),
@@ -22,8 +23,21 @@ void PreviewWindow::Render()
 		for (const auto& thumbnail : m_thumbnails)
 		{
 			ImGui::TableNextColumn();
+
 			ImVec2 thumbnailSize = calcThumbnailSize(thumbnail);
-			ImGui::Image(reinterpret_cast<void*>(thumbnail.m_image->GetTextureID()), thumbnailSize);
+			bool buttonPressed = ImGui::ImageButton(
+					thumbnail.m_name.c_str(),
+					reinterpret_cast<void*>(thumbnail.m_image->GetTextureID()),
+					thumbnailSize);
+
+			if (buttonPressed == true)
+			{
+				// TODO: Rather than calling the CanvasWindow directly here, have
+				// the PreviewWindow register button press callbacks. Then, the MainWindow
+				// can register a callback which access the CanvasWindow.
+				MainWindow::Get().GetCanvasWindow()->SetImage(thumbnail.m_image);
+			}
+
 			ImGui::Text("%s", thumbnail.m_name.c_str());
 		}
 		ImGui::EndTable();
