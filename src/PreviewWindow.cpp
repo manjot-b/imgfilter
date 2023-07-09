@@ -1,5 +1,4 @@
 #include "PreviewWindow.hpp"
-#include "MainWindow.hpp"
 
 PreviewWindow::PreviewWindow() :
 	IWindow("Preview"),
@@ -32,10 +31,8 @@ void PreviewWindow::Render()
 
 			if (buttonPressed == true)
 			{
-				// TODO: Rather than calling the CanvasWindow directly here, have
-				// the PreviewWindow register button press callbacks. Then, the MainWindow
-				// can register a callback which access the CanvasWindow.
-				MainWindow::Get().GetCanvasWindow()->SetImage(thumbnail.m_image);
+
+				notifyThumbnailSelect(thumbnail);
 			}
 
 			ImGui::Text("%s", thumbnail.m_name.c_str());
@@ -64,4 +61,17 @@ ImVec2 PreviewWindow::calcThumbnailSize(const Thumbnail& thumbnail)
 	}
 
 	return ImVec2(thumbnailWidth, thumbnailHeight);
+}
+
+void PreviewWindow::AddThumbnailSelectCallback(ThumbnailSelectFunction callback)
+{
+	m_thumbnailSelectCallbacks.push_back(callback);
+}
+
+void PreviewWindow::notifyThumbnailSelect(const Thumbnail& thumbnail)
+{
+	for (const auto& callback : m_thumbnailSelectCallbacks)
+	{
+		callback(thumbnail);
+	}
 }
