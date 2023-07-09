@@ -25,6 +25,8 @@ void CanvasWindow::Render()
 
 	if (m_activeImage != nullptr && m_activeImage->GetTextureID() != 0)
 	{
+		ImGui::Text("%s", m_title.c_str());
+
 		ImVec2 canvasSize = calcCanvasSize();
 		ImVec2 windowSize = ImGui::GetWindowSize();
 
@@ -39,7 +41,11 @@ void CanvasWindow::Render()
 	style.WindowPadding = oldPadding;
 }
 
-void CanvasWindow::SetImage(std::shared_ptr<const Image> image) { m_activeImage = image; }
+void CanvasWindow::SetImage(std::shared_ptr<const Image> image, const std::string& title)
+{
+	m_activeImage = image;
+	m_title = title;
+}
 
 ImVec2 CanvasWindow::calcCanvasSize()
 {

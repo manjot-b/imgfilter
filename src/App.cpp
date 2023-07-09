@@ -36,7 +36,7 @@ bool App::LoadImage(const std::string& filepath)
 
 	m_originalImage->PrintInfo();
 
-	m_mainWindow.GetCanvasWindow()->SetImage(m_originalImage);
+	m_mainWindow.GetCanvasWindow()->SetImage(m_originalImage, "Original");
 	m_mainWindow.GetPreviewWindow()->GetThumbnails().emplace_back("Original", m_originalImage);
 
 	return true;
