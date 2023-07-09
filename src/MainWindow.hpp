@@ -14,6 +14,19 @@ class GLFWwindow;
 
 class MainWindow : public IWindow
 {
+	public:
+		MainWindow(const MainWindow&) = delete;
+		void operator=(const MainWindow&) = delete;
+
+		static MainWindow& Get();
+		virtual void Render() override;
+		bool ReadyToClose();
+		void Close();
+		std::shared_ptr<CanvasWindow> GetCanvasWindow();
+		std::shared_ptr<PreviewWindow> GetPreviewWindow();
+		std::shared_ptr<ProfilerWindow> GetProfilerWindow();
+		void OnThumbnailSelect(const Thumbnail& thumbnail);
+
 	private:
 		MainWindow();
 		static void ErrorCallback(int error, const char* description);
@@ -27,17 +40,4 @@ class MainWindow : public IWindow
 		std::shared_ptr<Image> m_originalImage;
 
 		void displayDockingSpace();
-
-	public:
-		MainWindow(const MainWindow&) = delete;
-		void operator=(const MainWindow&) = delete;
-
-		static MainWindow& Get();
-		virtual void Render() override;
-		bool ReadyToClose();
-		void Close();
-		std::shared_ptr<CanvasWindow> GetCanvasWindow();
-		std::shared_ptr<PreviewWindow> GetPreviewWindow();
-		std::shared_ptr<ProfilerWindow> GetProfilerWindow();
-		void OnThumbnailSelect(const Thumbnail& thumbnail);
 };

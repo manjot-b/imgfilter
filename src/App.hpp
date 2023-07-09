@@ -8,11 +8,6 @@
 
 class App
 {
-	private:
-		App();
-		MainWindow& m_mainWindow;
-		std::shared_ptr<Image> m_originalImage;
-
 	public:
 		App(const App&) = delete;
 		void operator=(const App&) = delete;
@@ -20,4 +15,9 @@ class App
 		static App& Get();
 		void Run();
 		bool LoadImage(const std::string& filepath);
+
+	private:
+		App();
+		MainWindow& m_mainWindow;
+		std::shared_ptr<Image> m_originalImage;
 };

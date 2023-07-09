@@ -8,6 +8,11 @@
 
 class CanvasWindow : public IWindow
 {
+	public:
+		CanvasWindow();
+		virtual void Render() override;	
+		void SetImage(std::shared_ptr<const Image> image);
+
 	private:
 		std::shared_ptr<const Image> m_activeImage;
 		const int m_maxWidth;
@@ -15,9 +20,4 @@ class CanvasWindow : public IWindow
 		ImVec2 m_windowPadding;
 
 		ImVec2 calcCanvasSize();
-
-	public:
-		CanvasWindow();
-		virtual void Render() override;	
-		void SetImage(std::shared_ptr<const Image> image);
 };
