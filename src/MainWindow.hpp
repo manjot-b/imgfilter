@@ -10,7 +10,7 @@
 #include "PreviewWindow.hpp"
 #include "ProfilerWindow.hpp"
 
-class GLFWwindow;
+struct GLFWwindow;
 
 class MainWindow : public IWindow
 {

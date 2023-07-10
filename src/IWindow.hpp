@@ -5,6 +5,7 @@
 class IWindow
 {
 	public:
+		virtual ~IWindow() {}
 		/**
 		 * The ImGUI render function for a window. This method should call
 		 * ImGui::Begin and ImGui::End().

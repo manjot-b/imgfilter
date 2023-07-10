@@ -3,6 +3,9 @@ project(imgmanip LANGUAGES HIP)
 
 set(CMAKE_CXX_STANDARD 17)
 add_executable(${CMAKE_PROJECT_NAME} "")
+enable_language(CXX)
+
+target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE -Wall -Werror -Wno-pragma-once-outside-header)
 
 set(SOURCE_DIR "src")
 add_subdirectory(${SOURCE_DIR})
