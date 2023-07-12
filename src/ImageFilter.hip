@@ -58,20 +58,17 @@ std::vector<std::shared_ptr<Image>> GetFilteredImages(std::shared_ptr<Image> ori
 
 	GrayScaleFilter<<<gridDim, blockDim, 0, hipStreamDefault>>>(inImage, outImage, pixels, originalImage->GetComponents());
 
-	// TODO: Modify stb_image to use new() instead of malloc(). Then modify Image so that it takes
-	// ownership of the pointer passed in its constructor rather than performing a memcpy. This way
-	// the destructor of Image can always call delete[];
 	// copy out image to a local buf and create an Image
-	uchar* grayImage = new uchar[bytes];
-	HIPCheck(hipMemcpy(grayImage, outImage, bytes, hipMemcpyDeviceToHost));
+	std::vector<uchar> grayImage(bytes);
+	HIPCheck(hipMemcpy(grayImage.data(), outImage, bytes, hipMemcpyDeviceToHost));
+
 	filteredImages.push_back(std::make_shared<Image>(
 				"imgs/gray.jpg",
-				grayImage,
+				std::move(grayImage),
 				originalImage->GetWidth(),
 				originalImage->GetHeight(),
 				originalImage->GetComponents())
 	);
-	delete[] grayImage;
 
 	HIPCheck(hipFree(inImage));
 	HIPCheck(hipFree(outImage));

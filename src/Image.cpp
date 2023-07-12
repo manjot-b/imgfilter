@@ -1,48 +1,42 @@
 #include "Image.hpp"
+
+#include <cassert>
 #include <cstring>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 
 Image::Image(const std::string& filename)
-	: m_filename(filename), m_imageData(nullptr), m_textureID(0)
+	: m_filename(filename), m_textureID(0)
 {
  	uchar* imageData = stbi_load(filename.c_str(), &m_width, &m_height, &m_components, 0);
 
 	if (imageData != nullptr)
 	{
 		size_t bytes = m_width * m_height * m_components;
-		m_imageData = new uchar[bytes];
+		m_imageData = std::vector<uchar>(imageData, imageData + bytes);
 
-		std::memcpy(m_imageData, imageData, bytes);
 		stbi_image_free(imageData);
 
 		createOpenGLTexture();
 	}
 }
 
-Image::Image(const std::string& filename, const uchar* imageData, int width, int height, int components)
+Image::Image(const std::string& filename, std::vector<uchar>&& imageData, int width, int height, int components)
 	: m_filename(filename),
-	m_imageData(nullptr),
+	m_imageData(std::move(imageData)),
 	m_width(width),
 	m_height(height),
 	m_components(components),
 	m_textureID(0)
 {
-	size_t bytes = m_width * m_height * m_components;
-	m_imageData = new uchar[bytes];
-	std::memcpy(m_imageData, imageData, bytes);
-
+	assert(m_imageData.size() == m_width * m_height * m_components);
 	createOpenGLTexture();
 }
 
 Image::~Image()
 {
-	if (m_imageData != nullptr)
-	{
-		delete[] m_imageData;
-		glDeleteTextures(1, &m_textureID);
-	}
+	glDeleteTextures(1, &m_textureID);
 }
 
 void Image::createOpenGLTexture()
@@ -59,16 +53,16 @@ void Image::createOpenGLTexture()
 	switch(m_components)
 	{
 		case 1:
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, m_width, m_height, 0, GL_RED, GL_UNSIGNED_BYTE, m_imageData);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, m_width, m_height, 0, GL_RED, GL_UNSIGNED_BYTE, m_imageData.data());
 			break;
 		case 2:
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RG, m_width, m_height, 0, GL_RG, GL_UNSIGNED_BYTE, m_imageData);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RG, m_width, m_height, 0, GL_RG, GL_UNSIGNED_BYTE, m_imageData.data());
 			break;
 		case 3:
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_width, m_height, 0, GL_RGB, GL_UNSIGNED_BYTE, m_imageData);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_width, m_height, 0, GL_RGB, GL_UNSIGNED_BYTE, m_imageData.data());
 			break;
 		case 4:
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_imageData);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_imageData.data());
 			break;
 		default: break;
 	}
@@ -78,7 +72,7 @@ void Image::createOpenGLTexture()
 
 const std::string& Image::GetFilename() const { return m_filename; }
 
-const uchar* Image::GetData() const { return m_imageData; }
+const uchar* Image::GetData() const { return m_imageData.data(); }
 
 int Image::GetWidth() const { return m_width; }
 

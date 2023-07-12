@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <glad/glad.h>
+#include <vector>
 
 using uchar = unsigned char;
 
@@ -9,7 +10,7 @@ class Image
 {
 	public:
 		Image(const std::string& filename);
-		Image(const std::string& filename, const uchar* imageData, int width, int height, int components);
+		Image(const std::string& filename, std::vector<uchar>&& imageData, int width, int height, int components);
 		~Image();
 
 		const std::string& GetFilename() const;
@@ -24,7 +25,7 @@ class Image
 
 	private:
 		const std::string& m_filename;
-		uchar* m_imageData;
+		std::vector<uchar> m_imageData;
 		int m_width;
 		int m_height;
 		int m_components;
