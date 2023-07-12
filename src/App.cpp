@@ -1,7 +1,9 @@
 #include "App.hpp"
-#include "PreviewWindow.hpp"
 
 #include <iostream>
+
+#include "ImageFilter.hpp"
+#include "PreviewWindow.hpp"
 
 App::App() : m_mainWindow(MainWindow::Get())
 {
@@ -38,6 +40,9 @@ bool App::LoadImage(const std::string& filepath)
 
 	m_mainWindow.GetCanvasWindow()->SetImage(m_originalImage, "Original");
 	m_mainWindow.GetPreviewWindow()->GetThumbnails().emplace_back("Original", m_originalImage);
+
+	auto filterdImages = ImageFilter::GetFilteredImages(m_originalImage);
+	m_mainWindow.GetPreviewWindow()->GetThumbnails().emplace_back("greey", filterdImages.front());
 
 	return true;
 }
