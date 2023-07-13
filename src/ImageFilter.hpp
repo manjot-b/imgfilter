@@ -7,7 +7,7 @@
 
 namespace ImageFilter
 {
-	std::vector<std::shared_ptr<Image>> GetFilteredImages(std::shared_ptr<Image> originalImage);
+	std::vector<std::shared_ptr<Image>> GetFilteredImages(std::shared_ptr<const Image> originalImage);
 }
 
 

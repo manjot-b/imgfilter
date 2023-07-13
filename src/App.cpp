@@ -49,7 +49,7 @@ bool App::LoadImage(const std::string& filepath)
 	for (auto& image : filteredImages)
 	{
 		std::filesystem::path path(image->GetFilename());
-		m_mainWindow.GetPreviewWindow()->GetThumbnails().emplace_back(path.stem(), filteredImages.front());
+		m_mainWindow.GetPreviewWindow()->GetThumbnails().emplace_back(path.stem(), image);
 	}
 
 	return true;
