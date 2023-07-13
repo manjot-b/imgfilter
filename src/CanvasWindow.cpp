@@ -41,10 +41,10 @@ void CanvasWindow::Render()
 	style.WindowPadding = oldPadding;
 }
 
-void CanvasWindow::SetImage(std::shared_ptr<const Image> image, const std::string& title)
+void CanvasWindow::SetImage(const std::string& title, std::shared_ptr<const Image> image)
 {
-	m_activeImage = image;
 	m_title = title;
+	m_activeImage = image;
 }
 
 ImVec2 CanvasWindow::calcCanvasSize()

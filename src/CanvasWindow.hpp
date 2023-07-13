@@ -11,11 +11,11 @@ class CanvasWindow : public IWindow
 	public:
 		CanvasWindow();
 		virtual void Render() override;	
-		void SetImage(std::shared_ptr<const Image> image, const std::string& title);
+		void SetImage(const std::string& title, std::shared_ptr<const Image> image);
 
 	private:
-		std::shared_ptr<const Image> m_activeImage;
 		std::string m_title;
+		std::shared_ptr<const Image> m_activeImage;
 
 		const int m_maxWidth;
 		const int m_maxHeight;

@@ -189,5 +189,5 @@ std::shared_ptr<ProfilerWindow> MainWindow::GetProfilerWindow() { return m_profi
 
 void MainWindow::OnThumbnailSelect(const Thumbnail& thumbnail)
 {
-	m_canvasWindow->SetImage(thumbnail.m_image, thumbnail.m_name);
+	m_canvasWindow->SetImage(thumbnail.m_name, thumbnail.m_image);
 }

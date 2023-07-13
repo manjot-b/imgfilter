@@ -40,7 +40,7 @@ bool App::LoadImage(const std::string& filepath)
 	m_originalImage->PrintInfo();
 
 	std::filesystem::path originalPath(m_originalImage->GetFilename());
-	m_mainWindow.GetCanvasWindow()->SetImage(m_originalImage, originalPath.stem());
+	m_mainWindow.GetCanvasWindow()->SetImage(originalPath.stem(), m_originalImage);
 	m_mainWindow.GetPreviewWindow()->GetThumbnails().emplace_back(originalPath.stem(), m_originalImage);
 
 	// Extract the stem of the filename from the image. Then, use it to create a thumbnail.
