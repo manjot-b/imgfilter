@@ -24,7 +24,7 @@ class Image
 		void Write(const std::string& filename) const;
 
 	private:
-		const std::string& m_filename;
+		const std::string m_filename;
 		std::vector<uchar> m_imageData;
 		int m_width;
 		int m_height;

@@ -1,5 +1,6 @@
 #include "App.hpp"
 
+#include <filesystem>
 #include <iostream>
 
 #include "ImageFilter.hpp"
@@ -38,11 +39,18 @@ bool App::LoadImage(const std::string& filepath)
 
 	m_originalImage->PrintInfo();
 
-	m_mainWindow.GetCanvasWindow()->SetImage(m_originalImage, "Original");
-	m_mainWindow.GetPreviewWindow()->GetThumbnails().emplace_back("Original", m_originalImage);
+	std::filesystem::path originalPath(m_originalImage->GetFilename());
+	m_mainWindow.GetCanvasWindow()->SetImage(m_originalImage, originalPath.stem());
+	m_mainWindow.GetPreviewWindow()->GetThumbnails().emplace_back(originalPath.stem(), m_originalImage);
 
-	auto filterdImages = ImageFilter::GetFilteredImages(m_originalImage);
-	m_mainWindow.GetPreviewWindow()->GetThumbnails().emplace_back("greey", filterdImages.front());
+	// Extract the stem of the filename from the image. Then, use it to create a thumbnail.
+	// The stem is expected to be unique.
+	auto filteredImages = ImageFilter::GetFilteredImages(m_originalImage);
+	for (auto& image : filteredImages)
+	{
+		std::filesystem::path path(image->GetFilename());
+		m_mainWindow.GetPreviewWindow()->GetThumbnails().emplace_back(path.stem(), filteredImages.front());
+	}
 
 	return true;
 }

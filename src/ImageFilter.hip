@@ -63,7 +63,7 @@ std::vector<std::shared_ptr<Image>> GetFilteredImages(std::shared_ptr<Image> ori
 	HIPCheck(hipMemcpy(grayImage.data(), outImage, bytes, hipMemcpyDeviceToHost));
 
 	filteredImages.push_back(std::make_shared<Image>(
-				"imgs/gray.jpg",
+				"imgs/gray.png",
 				std::move(grayImage),
 				originalImage->GetWidth(),
 				originalImage->GetHeight(),
