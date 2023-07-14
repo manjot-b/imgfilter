@@ -1,4 +1,5 @@
 #include "ImageFilter.hpp"
+#include "ImageFilter_internal.hpp"
 
 #include <hip/hip_runtime.h>
 #include <memory>
@@ -84,42 +85,6 @@ inline void HIPCheck(hipError_t error)
 	}
 }
 
-static std::vector<uchar> computeGrayScale(const uchar* d_inImage, const std::shared_ptr<const Image> originalImage, dim3 blockDim, dim3 gridDim)
-{
-	size_t pixels = originalImage->GetWidth() * originalImage->GetHeight();
-	size_t bytes = sizeof(uchar) * pixels * originalImage->GetComponents();
-
-	uchar* d_outImage = nullptr;
-	HIPCheck(hipMalloc(&d_outImage, bytes));
-
-	GrayScaleFilter<<<gridDim, blockDim, 0, hipStreamDefault>>>(d_inImage, d_outImage, pixels, originalImage->GetComponents());
-	HIPCheck(hipGetLastError());
-
-	std::vector<uchar> outImageData(bytes);
-	HIPCheck(hipMemcpy(outImageData.data(), d_outImage, bytes, hipMemcpyDeviceToHost));
-	HIPCheck(hipFree(d_outImage));
-
-	return outImageData;
-}
-
-static std::vector<uchar> computeSepia(const uchar* d_inImage, const std::shared_ptr<const Image> originalImage, dim3 blockDim, dim3 gridDim)
-{
-	size_t pixels = originalImage->GetWidth() * originalImage->GetHeight();
-	size_t bytes = sizeof(uchar) * pixels * originalImage->GetComponents();
-
-	uchar* d_outImage = nullptr;
-	HIPCheck(hipMalloc(&d_outImage, bytes));
-
-	SepiaFilter<<<gridDim, blockDim, 0, hipStreamDefault>>>(d_inImage, d_outImage, pixels, originalImage->GetComponents(), 1.f);
-	HIPCheck(hipGetLastError());
-
-	std::vector<uchar> outImageData(bytes);
-	HIPCheck(hipMemcpy(outImageData.data(), d_outImage, bytes, hipMemcpyDeviceToHost));
-	HIPCheck(hipFree(d_outImage));
-
-	return outImageData;
-}
-
 std::vector<std::shared_ptr<Image>> GetFilteredImages(std::shared_ptr<const Image> originalImage)
 {
 	size_t pixels = originalImage->GetWidth() * originalImage->GetHeight();
@@ -158,5 +123,41 @@ std::vector<std::shared_ptr<Image>> GetFilteredImages(std::shared_ptr<const Imag
 	HIPCheck(hipFree(d_inImage));
 
 	return filteredImages;
+}
+
+std::vector<uchar> computeGrayScale(const uchar* d_inImage, const std::shared_ptr<const Image> originalImage, dim3 blockDim, dim3 gridDim)
+{
+	size_t pixels = originalImage->GetWidth() * originalImage->GetHeight();
+	size_t bytes = sizeof(uchar) * pixels * originalImage->GetComponents();
+
+	uchar* d_outImage = nullptr;
+	HIPCheck(hipMalloc(&d_outImage, bytes));
+
+	GrayScaleFilter<<<gridDim, blockDim, 0, hipStreamDefault>>>(d_inImage, d_outImage, pixels, originalImage->GetComponents());
+	HIPCheck(hipGetLastError());
+
+	std::vector<uchar> outImageData(bytes);
+	HIPCheck(hipMemcpy(outImageData.data(), d_outImage, bytes, hipMemcpyDeviceToHost));
+	HIPCheck(hipFree(d_outImage));
+
+	return outImageData;
+}
+
+std::vector<uchar> computeSepia(const uchar* d_inImage, const std::shared_ptr<const Image> originalImage, dim3 blockDim, dim3 gridDim)
+{
+	size_t pixels = originalImage->GetWidth() * originalImage->GetHeight();
+	size_t bytes = sizeof(uchar) * pixels * originalImage->GetComponents();
+
+	uchar* d_outImage = nullptr;
+	HIPCheck(hipMalloc(&d_outImage, bytes));
+
+	SepiaFilter<<<gridDim, blockDim, 0, hipStreamDefault>>>(d_inImage, d_outImage, pixels, originalImage->GetComponents(), 1.f);
+	HIPCheck(hipGetLastError());
+
+	std::vector<uchar> outImageData(bytes);
+	HIPCheck(hipMemcpy(outImageData.data(), d_outImage, bytes, hipMemcpyDeviceToHost));
+	HIPCheck(hipFree(d_outImage));
+
+	return outImageData;
 }
 }
