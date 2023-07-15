@@ -87,6 +87,8 @@ inline void HIPCheck(hipError_t error)
 
 std::vector<std::shared_ptr<Image>> GetFilteredImages(std::shared_ptr<const Image> originalImage)
 {
+	using namespace internal;
+
 	size_t pixels = originalImage->GetWidth() * originalImage->GetHeight();
 	size_t bytes = sizeof(uchar) * pixels * originalImage->GetComponents();
 
@@ -128,6 +130,7 @@ std::vector<std::shared_ptr<Image>> GetFilteredImages(std::shared_ptr<const Imag
 	return filteredImages;
 }
 
+namespace internal {
 std::vector<uchar> computeGrayScale(const uchar* d_inImage, const std::shared_ptr<const Image> originalImage, dim3 blockDim, dim3 gridDim)
 {
 	size_t pixels = originalImage->GetWidth() * originalImage->GetHeight();
@@ -251,4 +254,4 @@ std::vector<uchar> padRepeatEdge(std::shared_ptr<const Image> image, uchar2 filt
 
 	return padded;
 }
-}
+}} // namespace ImageFIlter
