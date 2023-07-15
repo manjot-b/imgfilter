@@ -8,4 +8,6 @@ namespace ImageFilter {
 std::vector<uchar> computeGrayScale(const uchar* d_inImage, const std::shared_ptr<const Image> originalImage, dim3 blockDim, dim3 gridDim);
 
 std::vector<uchar> computeSepia(const uchar* d_inImage, const std::shared_ptr<const Image> originalImage, dim3 blockDim, dim3 gridDim);
+
+std::vector<uchar> padRepeatEdge(std::shared_ptr<const Image> image, uchar2 filterDim, uint& width, uint& height);
 }

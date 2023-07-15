@@ -98,7 +98,6 @@ std::vector<std::shared_ptr<Image>> GetFilteredImages(std::shared_ptr<const Imag
 	dim3 blockDim = dim3(threads, 1, 1);
 	dim3 gridDim = dim3((pixels + threads - 1) / threads, 1, 1);	// ceiling(pixels / threads)
 
-
 	std::vector<std::shared_ptr<Image>> filteredImages;
 	std::vector<uchar> outImageData;
 
@@ -121,6 +120,10 @@ std::vector<std::shared_ptr<Image>> GetFilteredImages(std::shared_ptr<const Imag
 	);
 
 	HIPCheck(hipFree(d_inImage));
+
+	uchar2 filterDim = {3, 3};
+	uint paddedWidth, paddedHeight;
+	std::vector<uchar> paddedImage = padRepeatEdge(originalImage, filterDim, paddedWidth, paddedHeight);
 
 	return filteredImages;
 }
@@ -159,5 +162,93 @@ std::vector<uchar> computeSepia(const uchar* d_inImage, const std::shared_ptr<co
 	HIPCheck(hipFree(d_outImage));
 
 	return outImageData;
+}
+
+/**
+ * Return a new vector of the image data but padded along each edge with the duplicate of the
+ * respective edge.
+ * @param image The original unpadded image.
+ * @param filterDim The width and height of the kernel filter. Expected to be odd in both
+ *                  dimensions.
+ * @param[out] width The width of the padded image
+ * @param[out] height The height of the padded image
+ * @return The edge repeated padded image.
+ */
+std::vector<uchar> padRepeatEdge(std::shared_ptr<const Image> image, uchar2 filterDim, uint& width, uint& height)
+{
+	std::vector<uchar> padded;
+	width = height = 0;
+
+	// The filter must be odd else there is no center to the filter.
+	if (filterDim.x % 2 == 0 || filterDim.y % 2 == 0) { return padded; }
+
+	int extraCols = filterDim.x / 2;
+	int extraRows = filterDim.y / 2;
+
+	width = image->GetWidth() + extraCols * 2;
+	height = image->GetHeight() + extraRows * 2;
+
+	size_t pixelX = 0;
+	size_t pixelY = 0;
+	for (int row = -extraRows; row < image->GetHeight() + extraRows; ++row)
+	{
+		for (int col = -extraCols; col < image->GetWidth() + extraCols; ++col)
+		{
+			if (row < 0 && col < 0)
+			{
+				// Could also mirror the image diagonally but simple take the 0th index for now.
+				pixelX = 0;
+				pixelY = 0;
+			}
+			else if (row < 0 && col >= image->GetWidth())
+			{
+				pixelX = image->GetWidth() - 1;
+				pixelY = 0;
+			}
+			else if (row >= image->GetHeight() && col < 0)
+			{
+				pixelX = 0;
+				pixelY = image->GetHeight() - 1;
+			}
+			else if (row >= image->GetHeight() && col >= image->GetWidth())
+			{
+				pixelX = image->GetWidth() - 1;
+				pixelY = image->GetHeight() - 1;
+			}
+			else if (row < 0)
+			{
+				pixelX = col;
+				pixelY = 0;
+			}
+			else if (row >= image->GetHeight())
+			{
+				pixelX = col;
+				pixelY = image->GetHeight() - 1;
+			}
+			else if (col < 0)
+			{
+				pixelX = 0;
+				pixelY = row;
+			}
+			else if (col >= image->GetWidth())
+			{
+				pixelX = image->GetWidth() - 1;
+				pixelY = row;
+			}
+			else
+			{
+				pixelX = col;
+				pixelY = row;
+			}
+
+			for (unsigned int i = 0; i < image->GetComponents(); ++i)
+			{
+				size_t pixelOffset = (pixelY * image->GetWidth() + pixelX) * image->GetComponents() + i;
+				padded.push_back( *(image->GetData() + pixelOffset) );
+			}
+		}
+	}
+
+	return padded;
 }
 }
