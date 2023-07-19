@@ -20,20 +20,19 @@ __global__ void GrayScaleFilter(
 	const unsigned int PIXEL_OFFSET = (blockIdx.x * blockDim.x + threadIdx.x) * components;
 	const unsigned int TOTAL_BYTES = pixels * components;
 
-	if (PIXEL_OFFSET < TOTAL_BYTES)
+	if (PIXEL_OFFSET >= TOTAL_BYTES) { return; }
+
+	uchar3 color = {0, 0, 0};
+	color.x = inImage[PIXEL_OFFSET + 0];
+	color.y = inImage[PIXEL_OFFSET + 1];
+	color.z = inImage[PIXEL_OFFSET + 2];
+
+	const uchar RGBComponents = 3;
+	uchar gray = (color.x + color.y + color.z) / RGBComponents;
+
+	for (int i = 0; i < RGBComponents; i++)	// Assume image is RGB or RGBA
 	{
-		uchar3 color = {0, 0, 0};
-		color.x = inImage[PIXEL_OFFSET + 0];
-		color.y = inImage[PIXEL_OFFSET + 1];
-		color.z = inImage[PIXEL_OFFSET + 2];
-
-		const uchar RGBComponents = 3;
-		uchar gray = (color.x + color.y + color.z) / RGBComponents;
-
-		for (int i = 0; i < RGBComponents; i++)	// Assume image is RGB or RGBA
-		{
-			outImage[PIXEL_OFFSET + i] = gray;
-		}
+		outImage[PIXEL_OFFSET + i] = gray;
 	}
 }
 
@@ -47,33 +46,32 @@ __global__ void SepiaFilter(
 	const unsigned int PIXEL_OFFSET = (blockIdx.x * blockDim.x + threadIdx.x) * components;
 	const unsigned int TOTAL_BYTES = pixels * components;
 
-	if (PIXEL_OFFSET < TOTAL_BYTES)
-	{
-		uchar3 color = {0, 0, 0};
-		color.x = inImage[PIXEL_OFFSET + 0];
-		color.y = inImage[PIXEL_OFFSET + 1];
-		color.z = inImage[PIXEL_OFFSET + 2];
+	if (PIXEL_OFFSET >= TOTAL_BYTES) { return; }
 
-		// Taken from https://yabirgb.com/sepia_filter/
-		float3 sepia;
-		sepia.x = (0.393f + 0.607f * (1 - k)) * color.x
-			+ (0.769f - 0.769f * (1 - k)) * color.y
-			+ (0.189f - 0.189f * (1 - k)) * color.z;
-		sepia.y = (0.349f - 0.349f * (1 - k)) * color.x
-			+ (0.686f + 0.314f * (1 - k)) * color.y
-			+ (0.168f - 0.168f * (1 - k)) * color.z;
-		sepia.z = (0.272f - 0.349f * (1 - k)) * color.x
-			+ (0.534f - 0.534f * (1 - k)) * color.y
-			+ (0.131f + 0.869f * (1 - k)) * color.z;
+	uchar3 color = {0, 0, 0};
+	color.x = inImage[PIXEL_OFFSET + 0];
+	color.y = inImage[PIXEL_OFFSET + 1];
+	color.z = inImage[PIXEL_OFFSET + 2];
 
-		sepia.x = clamp(sepia.x, 0, 255);
-		sepia.y = clamp(sepia.y, 0, 255);
-		sepia.z = clamp(sepia.z, 0, 255);
+	// Taken from https://yabirgb.com/sepia_filter/
+	float3 sepia;
+	sepia.x = (0.393f + 0.607f * (1 - k)) * color.x
+		+ (0.769f - 0.769f * (1 - k)) * color.y
+		+ (0.189f - 0.189f * (1 - k)) * color.z;
+	sepia.y = (0.349f - 0.349f * (1 - k)) * color.x
+		+ (0.686f + 0.314f * (1 - k)) * color.y
+		+ (0.168f - 0.168f * (1 - k)) * color.z;
+	sepia.z = (0.272f - 0.349f * (1 - k)) * color.x
+		+ (0.534f - 0.534f * (1 - k)) * color.y
+		+ (0.131f + 0.869f * (1 - k)) * color.z;
 
-		outImage[PIXEL_OFFSET + 0] = sepia.x;
-		outImage[PIXEL_OFFSET + 1] = sepia.y;
-		outImage[PIXEL_OFFSET + 2] = sepia.z;
-	}
+	sepia.x = clamp(sepia.x, 0, 255);
+	sepia.y = clamp(sepia.y, 0, 255);
+	sepia.z = clamp(sepia.z, 0, 255);
+
+	outImage[PIXEL_OFFSET + 0] = sepia.x;
+	outImage[PIXEL_OFFSET + 1] = sepia.y;
+	outImage[PIXEL_OFFSET + 2] = sepia.z;
 }
 
 /**
@@ -228,7 +226,7 @@ std::vector<std::shared_ptr<Image>> GetFilteredImages(std::shared_ptr<const Imag
 }
 
 namespace internal {
-std::vector<uchar> computeGrayScale(const uchar* d_inImage, const std::shared_ptr<const Image> originalImage, dim3 blockDim, dim3 gridDim)
+std::vector<uchar> computeGrayScale(const uchar* d_inImage, std::shared_ptr<const Image> originalImage, dim3 blockDim, dim3 gridDim)
 {
 	size_t pixels = originalImage->GetWidth() * originalImage->GetHeight();
 	size_t bytes = sizeof(uchar) * pixels * originalImage->GetComponents();
@@ -239,14 +237,14 @@ std::vector<uchar> computeGrayScale(const uchar* d_inImage, const std::shared_pt
 	GrayScaleFilter<<<gridDim, blockDim, 0, hipStreamDefault>>>(d_inImage, d_outImage, pixels, originalImage->GetComponents());
 	HIPCheck(hipGetLastError());
 
-	std::vector<uchar> outImageData(bytes);
+	std::vector<uchar> outImageData(bytes / sizeof(uchar));
 	HIPCheck(hipMemcpy(outImageData.data(), d_outImage, bytes, hipMemcpyDeviceToHost));
 	HIPCheck(hipFree(d_outImage));
 
 	return outImageData;
 }
 
-std::vector<uchar> computeSepia(const uchar* d_inImage, const std::shared_ptr<const Image> originalImage, dim3 blockDim, dim3 gridDim)
+std::vector<uchar> computeSepia(const uchar* d_inImage, std::shared_ptr<const Image> originalImage, dim3 blockDim, dim3 gridDim)
 {
 	size_t pixels = originalImage->GetWidth() * originalImage->GetHeight();
 	size_t bytes = sizeof(uchar) * pixels * originalImage->GetComponents();
@@ -257,7 +255,7 @@ std::vector<uchar> computeSepia(const uchar* d_inImage, const std::shared_ptr<co
 	SepiaFilter<<<gridDim, blockDim, 0, hipStreamDefault>>>(d_inImage, d_outImage, pixels, originalImage->GetComponents(), 1.f);
 	HIPCheck(hipGetLastError());
 
-	std::vector<uchar> outImageData(bytes);
+	std::vector<uchar> outImageData(bytes / sizeof(uchar));
 	HIPCheck(hipMemcpy(outImageData.data(), d_outImage, bytes, hipMemcpyDeviceToHost));
 	HIPCheck(hipFree(d_outImage));
 
@@ -294,7 +292,7 @@ std::vector<uchar> computeBoxBlur(
 	);
 	HIPCheck(hipGetLastError());
 
-	std::vector<uchar> outImageData(bytes);
+	std::vector<uchar> outImageData(bytes / sizeof(uchar));
 	HIPCheck(hipMemcpy(outImageData.data(), d_outImage, bytes, hipMemcpyDeviceToHost));
 	HIPCheck(hipFree(d_filter));
 	HIPCheck(hipFree(d_outImage));
