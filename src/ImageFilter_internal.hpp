@@ -9,5 +9,13 @@ std::vector<uchar> computeGrayScale(const uchar* d_inImage, const std::shared_pt
 
 std::vector<uchar> computeSepia(const uchar* d_inImage, const std::shared_ptr<const Image> originalImage, dim3 blockDim, dim3 gridDim);
 
-std::vector<uchar> padRepeatEdge(std::shared_ptr<const Image> image, uchar2 filterDim, uint& width, uint& height);
+std::vector<uchar> computeBoxBlur(
+		const uchar* d_paddedInImage,
+		std::shared_ptr<const Image> originalImage,
+		const float* filter,
+		uint2 filterDim,
+		dim3 blockDim,
+		dim3 gridDim);
+
+std::vector<uchar> padRepeatEdge(std::shared_ptr<const Image> image, uint2 filterDim, uint& width, uint& height);
 }} // namespace ImageFilter::internal

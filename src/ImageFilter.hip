@@ -76,6 +76,71 @@ __global__ void SepiaFilter(
 	}
 }
 
+/**
+ * Performs a convolution on the input image using a non-seperable filter.
+ * @param paddedInImage The input image but padded with @c filterDim.x / 2 cols added to each side
+ *   and @c filterDim.y / 2 rows added to the top and bottom.
+ * @param outImage The image to output to.
+ * @param originalDim The dimension of @c paddedInImage were it not padded. Same size as @c outImage.
+ * @param components The number of components of @c paddedInImage
+ * @param filter A row-major normalized filter.
+ * @param The dimensions of @c filter.
+ */
+__global__ void NonSeperableConvolution(
+		const uchar* paddedInImage,
+		uchar* outImage,
+		uint2 originalDim,
+		uint components,
+		float* filter,
+		uint2 filterDim)
+{
+	// NOTE: Bug on Radeon RX 580 gfx803. Cannot set uint2 variable to const.
+	const uint filterRadiusX = filterDim.x / 2;
+	const uint filterRadiusY = filterDim.y / 2;
+	const uint paddedDimX = originalDim.x + filterRadiusX * 2;
+
+	// Shift the pixel over by the padded rows, then the padded columns, then get to the correct row
+	// based on the current pixel from the original unpadded image.
+	const uint paddedRowShift = paddedDimX * filterRadiusY * components;
+	const uint paddedColShift = filterRadiusX * components;
+	const uint PAD_SHIFT = paddedRowShift + paddedColShift;
+
+	const uint originalPixel = blockIdx.x * blockDim.x + threadIdx.x;
+	const uint ORIGINAL_PIXEL_OFFSET = originalPixel * components;
+
+	const uint rowIdx = originalPixel / originalDim.x;
+	const uint colIdx = originalPixel - originalDim.x * rowIdx;
+	const uint PADDED_PIXEL_OFFSET = PAD_SHIFT + (rowIdx * paddedDimX + colIdx) * components;
+	const uint LAST_PIXEL_OFFSET = PAD_SHIFT + ( (originalDim.y - 1) * paddedDimX + (originalDim.x - 1) ) * components;
+
+	if (PADDED_PIXEL_OFFSET > LAST_PIXEL_OFFSET) { return; }
+
+
+	float3 color = {0.f, 0.f, 0.f};
+	for (int row = 0; row < filterDim.y; ++row)
+	{
+		// Get to the correct kernel row
+		uint kernelPixelRow = PADDED_PIXEL_OFFSET + (row - filterRadiusY) * paddedDimX * components;
+		for (int col = 0; col < filterDim.x; ++col)
+		{
+			// Offset by the kernel column
+			uint kernelPixel = kernelPixelRow + (col - filterRadiusX) * components;
+
+			uint filterIdx = filterDim.x * row + col;
+			color.x += paddedInImage[kernelPixel + 0] * filter[filterIdx];
+			color.y += paddedInImage[kernelPixel + 1] * filter[filterIdx];
+			color.z += paddedInImage[kernelPixel + 2] * filter[filterIdx];
+		}
+	}
+	color.x = clamp(color.x, 0, 255);
+	color.y = clamp(color.y, 0, 255);
+	color.z = clamp(color.z, 0, 255);
+
+	outImage[ORIGINAL_PIXEL_OFFSET + 0] = color.x;
+	outImage[ORIGINAL_PIXEL_OFFSET + 1] = color.y;
+	outImage[ORIGINAL_PIXEL_OFFSET + 2] = color.z;
+}
+
 namespace ImageFilter {
 inline void HIPCheck(hipError_t error)
 {
@@ -123,9 +188,41 @@ std::vector<std::shared_ptr<Image>> GetFilteredImages(std::shared_ptr<const Imag
 
 	HIPCheck(hipFree(d_inImage));
 
-	uchar2 filterDim = {3, 3};
+	/**********************************
+	******* Padded image filters ******
+	**********************************/
+	uint2 filterDim = {3, 3};
 	uint paddedWidth, paddedHeight;
-	std::vector<uchar> paddedImage = padRepeatEdge(originalImage, filterDim, paddedWidth, paddedHeight);
+	std::vector<uchar> paddedImageData = padRepeatEdge(originalImage, filterDim, paddedWidth, paddedHeight);
+
+	pixels = paddedWidth * paddedHeight;
+	bytes = sizeof(uchar) * pixels * originalImage->GetComponents();
+
+	uchar* d_paddedInImage = nullptr;
+	HIPCheck(hipMalloc(&d_paddedInImage, bytes));
+	HIPCheck(hipMemcpy(d_paddedInImage, paddedImageData.data(), bytes, hipMemcpyHostToDevice));
+
+	auto paddedImage = std::make_shared<Image>(
+				"imgs/repeat_padded.png",
+				std::move(paddedImageData),
+				paddedWidth,
+				paddedHeight,
+				originalImage->GetComponents()
+	);
+	filteredImages.push_back(paddedImage);
+
+	std::vector<float> filter(filterDim.x * filterDim.y, 1.f / (filterDim.x * filterDim.y));
+	outImageData = computeBoxBlur(d_paddedInImage, originalImage, filter.data(), filterDim, blockDim, gridDim);
+
+	filteredImages.push_back(std::make_shared<Image>(
+				"imgs/box_blur_3x3.png",
+				std::move(outImageData),
+				originalImage->GetWidth(),    // The size of the image remains the same.
+				originalImage->GetHeight(),
+				originalImage->GetComponents())
+	);
+
+	HIPCheck(hipFree(d_paddedInImage));
 
 	return filteredImages;
 }
@@ -167,6 +264,44 @@ std::vector<uchar> computeSepia(const uchar* d_inImage, const std::shared_ptr<co
 	return outImageData;
 }
 
+std::vector<uchar> computeBoxBlur(
+		const uchar* d_paddedInImage,
+		std::shared_ptr<const Image> originalImage,
+		const float* filter,
+		uint2 filterDim,
+		dim3 blockDim,
+		dim3 gridDim
+)
+{
+	size_t pixels = originalImage->GetWidth() * originalImage->GetHeight();
+	size_t bytes = sizeof(uchar) * pixels * originalImage->GetComponents();
+
+	uchar* d_outImage = nullptr;
+	HIPCheck(hipMalloc(&d_outImage, bytes));
+
+	float* d_filter = nullptr;
+	size_t filterSize = filterDim.x * filterDim.y;
+	HIPCheck(hipMalloc(&d_filter, sizeof(float) * filterSize));
+	HIPCheck(hipMemcpy(d_filter, filter, sizeof(float) * filterSize, hipMemcpyHostToDevice));
+
+	NonSeperableConvolution<<<gridDim, blockDim, 0, hipStreamDefault>>>(
+			d_paddedInImage,
+			d_outImage,
+			uint2(originalImage->GetWidth(), originalImage->GetHeight()),
+			originalImage->GetComponents(),
+			d_filter,
+			filterDim
+	);
+	HIPCheck(hipGetLastError());
+
+	std::vector<uchar> outImageData(bytes);
+	HIPCheck(hipMemcpy(outImageData.data(), d_outImage, bytes, hipMemcpyDeviceToHost));
+	HIPCheck(hipFree(d_filter));
+	HIPCheck(hipFree(d_outImage));
+
+	return outImageData;
+}
+
 /**
  * Return a new vector of the image data but padded along each edge with the duplicate of the
  * respective edge.
@@ -177,7 +312,7 @@ std::vector<uchar> computeSepia(const uchar* d_inImage, const std::shared_ptr<co
  * @param[out] height The height of the padded image
  * @return The edge repeated padded image.
  */
-std::vector<uchar> padRepeatEdge(std::shared_ptr<const Image> image, uchar2 filterDim, uint& width, uint& height)
+std::vector<uchar> padRepeatEdge(std::shared_ptr<const Image> image, uint2 filterDim, uint& width, uint& height)
 {
 	std::vector<uchar> padded;
 	width = height = 0;
