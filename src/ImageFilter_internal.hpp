@@ -18,4 +18,6 @@ std::vector<uchar> computeBoxBlur(
 		dim3 gridDim);
 
 std::vector<uchar> padRepeatEdge(std::shared_ptr<const Image> image, uint2 filterDim, uint& width, uint& height);
+
+std::vector<float> generateGaussianFilter(float sigma, uint dim);
 }} // namespace ImageFilter::internal

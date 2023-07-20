@@ -1,6 +1,7 @@
 #include "ImageFilter.hpp"
 #include "ImageFilter_internal.hpp"
 
+#include <cmath>
 #include <hip/hip_runtime.h>
 #include <memory>
 
@@ -220,6 +221,8 @@ std::vector<std::shared_ptr<Image>> GetFilteredImages(std::shared_ptr<const Imag
 				originalImage->GetComponents())
 	);
 
+	auto gausFilter = generateGaussianFilter(1.f, 5);
+
 	HIPCheck(hipFree(d_paddedInImage));
 
 	return filteredImages;
@@ -386,5 +389,40 @@ std::vector<uchar> padRepeatEdge(std::shared_ptr<const Image> image, uint2 filte
 	}
 
 	return padded;
+}
+
+/**
+ * Generate the dim x dim gaussian filter.
+ * @param sigma The standard deviation
+ * @param dim The dimension of the matrix. @note This should be odd. If not then the
+ *   returned filter will be of size @c (dim + 1) x (dim + 1)
+ */
+std::vector<float> generateGaussianFilter(float sigma, uint dim)
+{
+	std::vector<float> filter;
+
+	if (dim % 2 == 0) { ++dim; }
+
+	uint radius = dim / 2;
+
+	float sum = 0;
+	for (uint row = 0; row < dim; ++row)
+	{
+		for (uint col = 0; col < dim; ++col)
+		{
+			int x = row - radius;
+			int y = col - radius;
+
+			float exp = -(x * x + y * y) / (2.f * sigma * sigma);
+			float val = 1.f / (2.f * M_PI * sigma * sigma) * std::pow(M_E, exp);
+
+			filter.push_back(val);
+			sum += val;
+		}
+	}
+
+	for (float& val : filter) { val /= sum; }
+
+	return filter;
 }
 }} // namespace ImageFIlter
