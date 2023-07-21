@@ -212,7 +212,6 @@ std::vector<std::shared_ptr<Image>> GetFilteredImages(std::shared_ptr<const Imag
 
 	std::vector<float> filter(filterDim.x * filterDim.y, 1.f / (filterDim.x * filterDim.y));
 	outImageData = computeBoxBlur(d_paddedInImage, originalImage, filter.data(), filterDim, blockDim, gridDim);
-
 	filteredImages.push_back(std::make_shared<Image>(
 				"imgs/box_blur_3x3.png",
 				std::move(outImageData),
@@ -221,7 +220,14 @@ std::vector<std::shared_ptr<Image>> GetFilteredImages(std::shared_ptr<const Imag
 				originalImage->GetComponents())
 	);
 
-	auto gausFilter = generateGaussianFilter(1.f, 5);
+	outImageData = computeGaussianBlur(d_paddedInImage, originalImage, 1.f, filterDim.x, blockDim, gridDim);
+	filteredImages.push_back(std::make_shared<Image>(
+				"imgs/gaus_blur_3x3.png",
+				std::move(outImageData),
+				originalImage->GetWidth(),
+				originalImage->GetHeight(),
+				originalImage->GetComponents())
+	);
 
 	HIPCheck(hipFree(d_paddedInImage));
 
@@ -297,6 +303,47 @@ std::vector<uchar> computeBoxBlur(
 
 	std::vector<uchar> outImageData(bytes / sizeof(uchar));
 	HIPCheck(hipMemcpy(outImageData.data(), d_outImage, bytes, hipMemcpyDeviceToHost));
+
+	HIPCheck(hipFree(d_filter));
+	HIPCheck(hipFree(d_outImage));
+
+	return outImageData;
+}
+
+std::vector<uchar> computeGaussianBlur(
+		const uchar* d_paddedInImage,
+		std::shared_ptr<const Image> originalImage,
+		float sigma,
+		uint filterDim,
+		dim3 blockDim,
+		dim3 gridDim)
+{
+	size_t pixels = originalImage->GetWidth() * originalImage->GetHeight();
+	size_t bytes = sizeof(uchar) * pixels * originalImage->GetComponents();
+
+	uchar* d_outImage = nullptr;
+	HIPCheck(hipMalloc(&d_outImage, bytes));
+
+	auto gausFilter = generateGaussianFilter(sigma, filterDim);
+
+	float* d_filter = nullptr;
+	size_t filterSize = filterDim * filterDim;
+	HIPCheck(hipMalloc(&d_filter, sizeof(float) * filterSize));
+	HIPCheck(hipMemcpy(d_filter, gausFilter.data(), sizeof(float) * filterSize, hipMemcpyHostToDevice));
+
+	NonSeperableConvolution<<<gridDim, blockDim, 0, hipStreamDefault>>>(
+			d_paddedInImage,
+			d_outImage,
+			uint2(originalImage->GetWidth(), originalImage->GetHeight()),
+			originalImage->GetComponents(),
+			d_filter,
+			uint2(filterDim, filterDim)
+	);
+	HIPCheck(hipGetLastError());
+
+	std::vector<uchar> outImageData(bytes / sizeof(uchar));
+	HIPCheck(hipMemcpy(outImageData.data(), d_outImage, bytes, hipMemcpyDeviceToHost));
+
 	HIPCheck(hipFree(d_filter));
 	HIPCheck(hipFree(d_outImage));
 
