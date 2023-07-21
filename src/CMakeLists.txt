@@ -7,7 +7,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
 	Image.hpp
 	ImageFilter.hip
 	ImageFilter.hpp
-	ImageFilter_internal.hpp
+	ImageFilter_detail.hpp
 	IWindow.hpp
 	MainWindow.cpp
 	MainWindow.hpp

@@ -4,7 +4,7 @@
 
 #include "Image.hpp"
 
-namespace ImageFilter { namespace internal {
+namespace ImageFilter { namespace detail {
 std::vector<uchar> computeGrayScale(const uchar* d_inImage, std::shared_ptr<const Image> originalImage, dim3 blockDim, dim3 gridDim);
 
 std::vector<uchar> computeSepia(const uchar* d_inImage, std::shared_ptr<const Image> originalImage, dim3 blockDim, dim3 gridDim);
@@ -20,4 +20,4 @@ std::vector<uchar> computeBoxBlur(
 std::vector<uchar> padRepeatEdge(std::shared_ptr<const Image> image, uint2 filterDim, uint& width, uint& height);
 
 std::vector<float> generateGaussianFilter(float sigma, uint dim);
-}} // namespace ImageFilter::internal
+}} // namespace ImageFilter::detail

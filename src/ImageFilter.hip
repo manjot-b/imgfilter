@@ -1,5 +1,5 @@
 #include "ImageFilter.hpp"
-#include "ImageFilter_internal.hpp"
+#include "ImageFilter_detail.hpp"
 
 #include <cmath>
 #include <hip/hip_runtime.h>
@@ -151,7 +151,7 @@ inline void HIPCheck(hipError_t error)
 
 std::vector<std::shared_ptr<Image>> GetFilteredImages(std::shared_ptr<const Image> originalImage)
 {
-	using namespace internal;
+	using namespace detail;
 
 	size_t pixels = originalImage->GetWidth() * originalImage->GetHeight();
 	size_t bytes = sizeof(uchar) * pixels * originalImage->GetComponents();
@@ -228,7 +228,7 @@ std::vector<std::shared_ptr<Image>> GetFilteredImages(std::shared_ptr<const Imag
 	return filteredImages;
 }
 
-namespace internal {
+namespace detail {
 std::vector<uchar> computeGrayScale(const uchar* d_inImage, std::shared_ptr<const Image> originalImage, dim3 blockDim, dim3 gridDim)
 {
 	size_t pixels = originalImage->GetWidth() * originalImage->GetHeight();
