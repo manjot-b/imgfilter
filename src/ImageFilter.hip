@@ -5,6 +5,8 @@
 #include <hip/hip_runtime.h>
 #include <memory>
 
+#include "FilterParams.hpp"
+
 __device__ float clamp(float val, float min, float max)
 {
 	if (val < min) { return min; }
@@ -149,7 +151,9 @@ inline void HIPCheck(hipError_t error)
 	}
 }
 
-std::vector<std::shared_ptr<Image>> GetFilteredImages(std::shared_ptr<const Image> originalImage)
+std::vector<std::shared_ptr<Image>> GetFilteredImages(
+		std::shared_ptr<const Image> originalImage,
+		FilterParams& filterParams)
 {
 	using namespace detail;
 
@@ -176,7 +180,7 @@ std::vector<std::shared_ptr<Image>> GetFilteredImages(std::shared_ptr<const Imag
 				originalImage->GetComponents())
 	);
 
-	outImageData = computeSepia(d_inImage, originalImage, blockDim, gridDim);
+	outImageData = computeSepia(d_inImage, originalImage, filterParams.m_sepia.k, blockDim, gridDim);
 	filteredImages.push_back(std::make_shared<Image>(
 				"imgs/sepia.png",
 				std::move(outImageData),
@@ -253,7 +257,7 @@ std::vector<uchar> computeGrayScale(const uchar* d_inImage, std::shared_ptr<cons
 	return outImageData;
 }
 
-std::vector<uchar> computeSepia(const uchar* d_inImage, std::shared_ptr<const Image> originalImage, dim3 blockDim, dim3 gridDim)
+std::vector<uchar> computeSepia(const uchar* d_inImage, std::shared_ptr<const Image> originalImage, float k, dim3 blockDim, dim3 gridDim)
 {
 	size_t pixels = originalImage->GetWidth() * originalImage->GetHeight();
 	size_t bytes = sizeof(uchar) * pixels * originalImage->GetComponents();
@@ -261,7 +265,7 @@ std::vector<uchar> computeSepia(const uchar* d_inImage, std::shared_ptr<const Im
 	uchar* d_outImage = nullptr;
 	HIPCheck(hipMalloc(&d_outImage, bytes));
 
-	SepiaFilter<<<gridDim, blockDim, 0, hipStreamDefault>>>(d_inImage, d_outImage, pixels, originalImage->GetComponents(), 1.f);
+	SepiaFilter<<<gridDim, blockDim, 0, hipStreamDefault>>>(d_inImage, d_outImage, pixels, originalImage->GetComponents(), k);
 	HIPCheck(hipGetLastError());
 
 	std::vector<uchar> outImageData(bytes / sizeof(uchar));

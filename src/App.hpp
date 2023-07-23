@@ -16,10 +16,12 @@ class App
 		static App& Get();
 		void Run();
 		bool LoadImage(const std::string& filepath);
+		void ComputeAndDisplayFilteredImages();
 
 	private:
 		App();
 		MainWindow& m_mainWindow;
 		std::shared_ptr<Image> m_originalImage;
 		FilterParams m_filterParams;
+		FilterParams m_prevfilterParams;
 };

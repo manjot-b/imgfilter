@@ -9,8 +9,7 @@ void FilterParamsWindow::Render(FilterParams& filterParams)
 	ImGuiWindowFlags windowFlags = ImGuiWindowFlags_None;
 	ImGui::Begin(m_windowName.c_str(), nullptr, windowFlags);
 
-	ImGui::Text("some text in filter params");
-	ImGui::Button("a button in filter params");
+	ImGui::SliderFloat("Sepia k", &filterParams.m_sepia.k, 0.f, 1.f);
 
 	ImGui::End();
 }

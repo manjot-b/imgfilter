@@ -7,7 +7,12 @@
 namespace ImageFilter { namespace detail {
 std::vector<uchar> computeGrayScale(const uchar* d_inImage, std::shared_ptr<const Image> originalImage, dim3 blockDim, dim3 gridDim);
 
-std::vector<uchar> computeSepia(const uchar* d_inImage, std::shared_ptr<const Image> originalImage, dim3 blockDim, dim3 gridDim);
+std::vector<uchar> computeSepia(
+		const uchar* d_inImage,
+		std::shared_ptr<const Image> originalImage,
+		float k,
+		dim3 blockDim,
+		dim3 gridDim);
 
 std::vector<uchar> computeBoxBlur(
 		const uchar* d_paddedInImage,
