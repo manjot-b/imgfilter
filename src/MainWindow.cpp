@@ -20,13 +20,15 @@ MainWindow::MainWindow() :
 	IWindow("DockSpaceWindow"),
 	m_canvasWindow(std::make_shared<CanvasWindow>()),
 	m_previewWindow(std::make_shared<PreviewWindow>()),
-	m_profilerWindow(std::make_shared<ProfilerWindow>())
+	m_profilerWindow(std::make_shared<ProfilerWindow>()),
+	m_filterParamsWindow(std::make_shared<FilterParamsWindow>())
 {
 	using namespace std::placeholders;
 
 	m_windows.push_back(std::static_pointer_cast<IWindow>(m_canvasWindow));
 	m_windows.push_back(std::static_pointer_cast<IWindow>(m_previewWindow));
 	m_windows.push_back(std::static_pointer_cast<IWindow>(m_profilerWindow));
+	m_windows.push_back(std::static_pointer_cast<IWindow>(m_filterParamsWindow));
 
 	PreviewWindow::ThumbnailSelectFunction thumbnailSelectCallback = std::bind(&MainWindow::OnThumbnailSelect, this, _1);
 	m_previewWindow->AddThumbnailSelectCallback(thumbnailSelectCallback);
@@ -157,13 +159,15 @@ void MainWindow::displayDockingSpace()
         ImGui::DockBuilderAddNode(dockSpaceID, dockSpaceFlags);
         ImGui::DockBuilderSetNodeSize(dockSpaceID, viewport->Size);
 
+        ImGuiID upDockID, downDockID;
         ImGuiID leftDockID = ImGui::DockBuilderSplitNode(dockSpaceID, ImGuiDir_Left, 0.2f, nullptr, &dockSpaceID);
-        ImGuiID downDockID;
-		ImGuiID upDockID = ImGui::DockBuilderSplitNode(dockSpaceID, ImGuiDir_Up, 0.75f, nullptr, &downDockID);
+		ImGui::DockBuilderSplitNode(dockSpaceID, ImGuiDir_Up, 0.75f, &dockSpaceID, &downDockID);
+		ImGuiID rightDockID = ImGui::DockBuilderSplitNode(dockSpaceID, ImGuiDir_Right, 0.2f, nullptr, &upDockID);
 
-        ImGui::DockBuilderDockWindow(m_canvasWindow->GetWindowName(), upDockID);
         ImGui::DockBuilderDockWindow(m_previewWindow->GetWindowName(), leftDockID);
+        ImGui::DockBuilderDockWindow(m_canvasWindow->GetWindowName(), upDockID);
         ImGui::DockBuilderDockWindow(m_profilerWindow->GetWindowName(), downDockID);
+        ImGui::DockBuilderDockWindow(m_filterParamsWindow->GetWindowName(), rightDockID);
 
         ImGui::DockBuilderFinish(dockSpaceID);
     }

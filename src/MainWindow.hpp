@@ -1,12 +1,14 @@
 #pragma once
 
+#include "IWindow.hpp"
+
 #include <imgui.h>
 #include <memory>
 #include <vector>
 
-#include "IWindow.hpp"
-#include "Image.hpp"
 #include "CanvasWindow.hpp"
+#include "FilterParamsWindow.hpp"
+#include "Image.hpp"
 #include "PreviewWindow.hpp"
 #include "ProfilerWindow.hpp"
 
@@ -35,6 +37,7 @@ class MainWindow : public IWindow
 		std::shared_ptr<CanvasWindow> m_canvasWindow;
 		std::shared_ptr<PreviewWindow> m_previewWindow;
 		std::shared_ptr<ProfilerWindow> m_profilerWindow;
+		std::shared_ptr<FilterParamsWindow> m_filterParamsWindow;
 		std::vector<std::shared_ptr<IWindow>> m_windows;
 
 		std::shared_ptr<Image> m_originalImage;

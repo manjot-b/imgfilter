@@ -3,6 +3,8 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
 	App.hpp
 	CanvasWindow.cpp
 	CanvasWindow.hpp
+	FilterParamsWindow.cpp
+	FilterParamsWindow.hpp
 	Image.cpp
 	Image.hpp
 	ImageFilter.hip
