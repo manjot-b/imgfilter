@@ -10,7 +10,7 @@ CanvasWindow::CanvasWindow() :
 	m_windowPadding(0, 0)
 {}
 
-void CanvasWindow::Render()
+void CanvasWindow::Render(FilterParams& filterParams)
 {
 	ImGuiWindowFlags windowFlags = ImGuiWindowFlags_None;
 

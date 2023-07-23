@@ -79,7 +79,7 @@ void MainWindow::Close()
 	glfwTerminate();
 }
 
-void MainWindow::Render()
+void MainWindow::Render(FilterParams& filterParams)
 {
 	glfwPollEvents();
 
@@ -91,7 +91,7 @@ void MainWindow::Render()
 
 	for (auto window : m_windows)
 	{
-		window->Render();
+		window->Render(filterParams);
 	}
 
 	bool showImGuiDemo = false;

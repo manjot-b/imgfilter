@@ -22,7 +22,7 @@ void App::Run()
 {
 	while(m_mainWindow.ReadyToClose() == false)
 	{
-		m_mainWindow.Render();
+		m_mainWindow.Render(m_filterParams);
 	}
 
 	m_mainWindow.Close();

@@ -4,6 +4,7 @@
 #include <string>
 
 #include "Image.hpp"
+#include "FilterParams.hpp"
 #include "MainWindow.hpp"
 
 class App
@@ -20,4 +21,5 @@ class App
 		App();
 		MainWindow& m_mainWindow;
 		std::shared_ptr<Image> m_originalImage;
+		FilterParams m_filterParams;
 };

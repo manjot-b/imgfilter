@@ -2,6 +2,8 @@
 
 #include <string>
 
+#include "FilterParams.hpp"
+
 class IWindow
 {
 	public:
@@ -10,7 +12,7 @@ class IWindow
 		 * The ImGUI render function for a window. This method should call
 		 * ImGui::Begin and ImGui::End().
 		 */
-		virtual void Render() = 0;
+		virtual void Render(FilterParams& filterParams) = 0;
 
 		const char* GetWindowName() { return m_windowName.c_str(); }
 

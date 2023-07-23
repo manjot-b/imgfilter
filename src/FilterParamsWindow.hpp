@@ -6,5 +6,5 @@ class FilterParamsWindow : public IWindow
 {
 	public:
 		FilterParamsWindow();
-		virtual void Render() override;	
+		virtual void Render(FilterParams& filterParams) override;	
 };

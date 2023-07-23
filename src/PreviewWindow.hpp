@@ -21,7 +21,7 @@ class PreviewWindow : public IWindow
 {
 	public:
 		PreviewWindow();
-		virtual void Render() override;	
+		virtual void Render(FilterParams& filterParams) override;	
 		std::vector<Thumbnail>& GetThumbnails();
 
 		using ThumbnailSelectFunction = std::function<void(const Thumbnail& thumbnail)>;

@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "CanvasWindow.hpp"
+#include "FilterParams.hpp"
 #include "FilterParamsWindow.hpp"
 #include "Image.hpp"
 #include "PreviewWindow.hpp"
@@ -21,7 +22,7 @@ class MainWindow : public IWindow
 		void operator=(const MainWindow&) = delete;
 
 		static MainWindow& Get();
-		virtual void Render() override;
+		virtual void Render(FilterParams& filterParams) override;
 		bool ReadyToClose();
 		void Close();
 		std::shared_ptr<CanvasWindow> GetCanvasWindow();

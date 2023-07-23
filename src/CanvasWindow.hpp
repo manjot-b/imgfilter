@@ -10,7 +10,7 @@ class CanvasWindow : public IWindow
 {
 	public:
 		CanvasWindow();
-		virtual void Render() override;	
+		virtual void Render(FilterParams& filterParams) override;	
 		void SetImage(const std::string& title, std::shared_ptr<const Image> image);
 
 	private:

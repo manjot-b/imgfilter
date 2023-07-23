@@ -4,7 +4,7 @@
 
 ProfilerWindow::ProfilerWindow() : IWindow("Profiler") {}
 
-void ProfilerWindow::Render()
+void ProfilerWindow::Render(FilterParams& filterParams)
 {
 
 	ImGuiWindowFlags windowFlags = ImGuiWindowFlags_None;

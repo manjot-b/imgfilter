@@ -6,5 +6,5 @@ class ProfilerWindow : public IWindow
 {
 	public:
 		ProfilerWindow();
-		virtual void Render() override;	
+		virtual void Render(FilterParams& filterParams) override;	
 };

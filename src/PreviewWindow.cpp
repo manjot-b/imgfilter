@@ -6,7 +6,7 @@ PreviewWindow::PreviewWindow() :
 	m_maxThumbnailHeight(96)
 {}
 
-void PreviewWindow::Render()
+void PreviewWindow::Render(FilterParams& filterParams)
 {
 	ImGuiWindowFlags windowFlags = ImGuiWindowFlags_None;
 	ImGui::Begin(m_windowName.c_str(), nullptr, windowFlags);

@@ -4,7 +4,7 @@
 
 FilterParamsWindow::FilterParamsWindow() : IWindow("Filter Parameters") {}
 
-void FilterParamsWindow::Render()
+void FilterParamsWindow::Render(FilterParams& filterParams)
 {
 	ImGuiWindowFlags windowFlags = ImGuiWindowFlags_None;
 	ImGui::Begin(m_windowName.c_str(), nullptr, windowFlags);
