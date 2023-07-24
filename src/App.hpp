@@ -17,12 +17,13 @@ class App
 		void Run();
 		bool LoadImage(const std::string& filepath);
 		void ComputeAndDisplayFilteredImages();
-		void OnThumbnailSelect(const Thumbnail& thumbnail);
+		void OnThumbnailSelect(const Thumbnail& thumbnail, uint index);
 
 	private:
 		App();
 		MainWindow& m_mainWindow;
 		std::shared_ptr<Image> m_originalImage;
+		uint m_lastSelectedThumbnailIdx;
 		FilterParams m_filterParams;
 		FilterParams m_prevfilterParams;
 };

@@ -19,8 +19,9 @@ void PreviewWindow::Render(FilterParams& filterParams)
 	ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, cellPadding);
 	if (ImGui::BeginTable("Thumbnails", columns))
 	{
-		for (const auto& thumbnail : m_thumbnails)
+		for (uint i = 0; i < m_thumbnails.size(); ++i)
 		{
+			const auto& thumbnail = m_thumbnails[i];
 			ImGui::TableNextColumn();
 
 			ImVec2 thumbnailSize = calcThumbnailSize(thumbnail);
@@ -32,7 +33,7 @@ void PreviewWindow::Render(FilterParams& filterParams)
 			if (buttonPressed == true)
 			{
 
-				notifyThumbnailSelect(thumbnail);
+				notifyThumbnailSelect(thumbnail, i);
 			}
 
 			ImGui::Text("%s", thumbnail.m_name.c_str());
@@ -68,10 +69,10 @@ void PreviewWindow::AddThumbnailSelectCallback(ThumbnailSelectFunction callback)
 	m_thumbnailSelectCallbacks.push_back(callback);
 }
 
-void PreviewWindow::notifyThumbnailSelect(const Thumbnail& thumbnail)
+void PreviewWindow::notifyThumbnailSelect(const Thumbnail& thumbnail, uint index)
 {
 	for (const auto& callback : m_thumbnailSelectCallbacks)
 	{
-		callback(thumbnail);
+		callback(thumbnail, index);
 	}
 }

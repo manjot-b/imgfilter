@@ -24,7 +24,7 @@ class PreviewWindow : public IWindow
 		virtual void Render(FilterParams& filterParams) override;	
 		std::vector<Thumbnail>& GetThumbnails();
 
-		using ThumbnailSelectFunction = std::function<void(const Thumbnail& thumbnail)>;
+		using ThumbnailSelectFunction = std::function<void(const Thumbnail& thumbnail, uint index)>;
 		void AddThumbnailSelectCallback(ThumbnailSelectFunction callback);
 
 	private:
@@ -34,5 +34,5 @@ class PreviewWindow : public IWindow
 		std::vector<ThumbnailSelectFunction> m_thumbnailSelectCallbacks;
 
 		ImVec2 calcThumbnailSize(const Thumbnail& thumbnail);
-		void notifyThumbnailSelect(const Thumbnail& thumbnail);
+		void notifyThumbnailSelect(const Thumbnail& thumbnail, uint index);
 };
