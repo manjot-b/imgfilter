@@ -194,7 +194,7 @@ std::vector<std::shared_ptr<Image>> GetFilteredImages(
 	/**********************************
 	******* Padded image filters ******
 	**********************************/
-	uint2 filterDim = {3, 3};
+	uint2 filterDim = {filterParams.m_boxBlur.filterDim, filterParams.m_boxBlur.filterDim};
 	uint paddedWidth, paddedHeight;
 	std::vector<uchar> paddedImageData = padRepeatEdge(originalImage, filterDim, paddedWidth, paddedHeight);
 
@@ -214,8 +214,7 @@ std::vector<std::shared_ptr<Image>> GetFilteredImages(
 	);
 	filteredImages.push_back(paddedImage);
 
-	std::vector<float> filter(filterDim.x * filterDim.y, 1.f / (filterDim.x * filterDim.y));
-	outImageData = computeBoxBlur(d_paddedInImage, originalImage, filter.data(), filterDim, blockDim, gridDim);
+	outImageData = computeBoxBlur(d_paddedInImage, originalImage, filterDim.x, blockDim, gridDim);
 	filteredImages.push_back(std::make_shared<Image>(
 				"imgs/box_blur_3x3.png",
 				std::move(outImageData),
@@ -223,8 +222,26 @@ std::vector<std::shared_ptr<Image>> GetFilteredImages(
 				originalImage->GetHeight(),
 				originalImage->GetComponents())
 	);
+	// The next filter may need a different sized padded image, so free the current one.
+	HIPCheck(hipFree(d_paddedInImage));
 
-	outImageData = computeGaussianBlur(d_paddedInImage, originalImage, 1.f, filterDim.x, blockDim, gridDim);
+	uint2 gausFilterDim = {filterParams.m_gausBlur.filterDim, filterParams.m_gausBlur.filterDim};
+	paddedImageData = padRepeatEdge(originalImage, gausFilterDim, paddedWidth, paddedHeight);
+
+	pixels = paddedWidth * paddedHeight;
+	bytes = sizeof(uchar) * pixels * originalImage->GetComponents();
+
+	d_paddedInImage = nullptr;
+	HIPCheck(hipMalloc(&d_paddedInImage, bytes));
+	HIPCheck(hipMemcpy(d_paddedInImage, paddedImageData.data(), bytes, hipMemcpyHostToDevice));
+	outImageData = computeGaussianBlur(
+			d_paddedInImage,
+			originalImage,
+			filterParams.m_gausBlur.sigma,
+			gausFilterDim.x,
+			blockDim,
+			gridDim
+	);
 	filteredImages.push_back(std::make_shared<Image>(
 				"imgs/gaus_blur_3x3.png",
 				std::move(outImageData),
@@ -232,7 +249,6 @@ std::vector<std::shared_ptr<Image>> GetFilteredImages(
 				originalImage->GetHeight(),
 				originalImage->GetComponents())
 	);
-
 	HIPCheck(hipFree(d_paddedInImage));
 
 	return filteredImages;
@@ -278,8 +294,7 @@ std::vector<uchar> computeSepia(const uchar* d_inImage, std::shared_ptr<const Im
 std::vector<uchar> computeBoxBlur(
 		const uchar* d_paddedInImage,
 		std::shared_ptr<const Image> originalImage,
-		const float* filter,
-		uint2 filterDim,
+		uint filterDim,
 		dim3 blockDim,
 		dim3 gridDim
 )
@@ -290,10 +305,12 @@ std::vector<uchar> computeBoxBlur(
 	uchar* d_outImage = nullptr;
 	HIPCheck(hipMalloc(&d_outImage, bytes));
 
+	size_t filterSize = filterDim * filterDim;
+	std::vector<float> filter(filterSize, 1.f / (filterSize));
+
 	float* d_filter = nullptr;
-	size_t filterSize = filterDim.x * filterDim.y;
 	HIPCheck(hipMalloc(&d_filter, sizeof(float) * filterSize));
-	HIPCheck(hipMemcpy(d_filter, filter, sizeof(float) * filterSize, hipMemcpyHostToDevice));
+	HIPCheck(hipMemcpy(d_filter, filter.data(), sizeof(float) * filterSize, hipMemcpyHostToDevice));
 
 	NonSeperableConvolution<<<gridDim, blockDim, 0, hipStreamDefault>>>(
 			d_paddedInImage,
@@ -301,7 +318,7 @@ std::vector<uchar> computeBoxBlur(
 			uint2(originalImage->GetWidth(), originalImage->GetHeight()),
 			originalImage->GetComponents(),
 			d_filter,
-			filterDim
+			uint2(filterDim, filterDim)
 	);
 	HIPCheck(hipGetLastError());
 

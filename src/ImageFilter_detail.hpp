@@ -17,8 +17,7 @@ std::vector<uchar> computeSepia(
 std::vector<uchar> computeBoxBlur(
 		const uchar* d_paddedInImage,
 		std::shared_ptr<const Image> originalImage,
-		const float* filter,
-		uint2 filterDim,
+		uint filterDim,
 		dim3 blockDim,
 		dim3 gridDim);
 

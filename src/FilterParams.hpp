@@ -9,14 +9,14 @@ struct FilterParams
 		float k;
 	} m_sepia;
 
-	struct BoxBlux
+	struct BoxBlur
 	{
-		uint filterDim;
+		int filterDim;
 	} m_boxBlur;
 
 	struct GausBlur
 	{
-		uint filterDim;
+		int filterDim;
 		float sigma;
 	} m_gausBlur;
 

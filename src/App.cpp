@@ -10,6 +10,10 @@ App::App() : m_mainWindow(MainWindow::Get())
 {
 	// Create the main window so the the GLFW and OpenGL contexts
 	// get created before using them.
+	m_filterParams.m_sepia.k = 1.f;
+	m_filterParams.m_boxBlur.filterDim = 3;
+	m_filterParams.m_gausBlur.filterDim = 3;
+	m_filterParams.m_gausBlur.sigma = 1.f;
 }
 
 App& App::Get()
