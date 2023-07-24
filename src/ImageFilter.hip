@@ -4,6 +4,7 @@
 #include <cmath>
 #include <hip/hip_runtime.h>
 #include <memory>
+#include <sstream>
 
 #include "FilterParams.hpp"
 
@@ -194,6 +195,8 @@ std::vector<std::shared_ptr<Image>> GetFilteredImages(
 	/**********************************
 	******* Padded image filters ******
 	**********************************/
+
+	// Box blur
 	uint2 filterDim = {filterParams.m_boxBlur.filterDim, filterParams.m_boxBlur.filterDim};
 	uint paddedWidth, paddedHeight;
 	std::vector<uchar> paddedImageData = padRepeatEdge(originalImage, filterDim, paddedWidth, paddedHeight);
@@ -215,8 +218,11 @@ std::vector<std::shared_ptr<Image>> GetFilteredImages(
 	filteredImages.push_back(paddedImage);
 
 	outImageData = computeBoxBlur(d_paddedInImage, originalImage, filterDim.x, blockDim, gridDim);
+
+	std::stringstream ss;
+	ss << "imgs/box_blur_" << filterDim.x << "x" << filterDim.x << ".png";
 	filteredImages.push_back(std::make_shared<Image>(
-				"imgs/box_blur_3x3.png",
+				ss.str(),
 				std::move(outImageData),
 				originalImage->GetWidth(),    // The size of the image remains the same.
 				originalImage->GetHeight(),
@@ -225,6 +231,7 @@ std::vector<std::shared_ptr<Image>> GetFilteredImages(
 	// The next filter may need a different sized padded image, so free the current one.
 	HIPCheck(hipFree(d_paddedInImage));
 
+	// Gaus blur
 	uint2 gausFilterDim = {filterParams.m_gausBlur.filterDim, filterParams.m_gausBlur.filterDim};
 	paddedImageData = padRepeatEdge(originalImage, gausFilterDim, paddedWidth, paddedHeight);
 
@@ -242,8 +249,11 @@ std::vector<std::shared_ptr<Image>> GetFilteredImages(
 			blockDim,
 			gridDim
 	);
+
+	ss.clear();
+	ss << "imgs/gaus_blur_" << gausFilterDim.x << "x" << gausFilterDim.x << ".png";
 	filteredImages.push_back(std::make_shared<Image>(
-				"imgs/gaus_blur_3x3.png",
+				ss.str(),
 				std::move(outImageData),
 				originalImage->GetWidth(),
 				originalImage->GetHeight(),
