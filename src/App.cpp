@@ -10,10 +10,16 @@ App::App() : m_mainWindow(MainWindow::Get())
 {
 	// Create the main window so the the GLFW and OpenGL contexts
 	// get created before using them.
+
+	using namespace std::placeholders;
+
 	m_filterParams.m_sepia.k = 1.f;
 	m_filterParams.m_boxBlur.filterDim = 3;
 	m_filterParams.m_gausBlur.filterDim = 3;
 	m_filterParams.m_gausBlur.sigma = 1.f;
+
+	PreviewWindow::ThumbnailSelectFunction thumbnailSelectCallback = std::bind(&App::OnThumbnailSelect, this, _1);
+	m_mainWindow.GetPreviewWindow()->AddThumbnailSelectCallback(thumbnailSelectCallback);
 }
 
 App& App::Get()
@@ -71,6 +77,11 @@ void App::ComputeAndDisplayFilteredImages()
 		m_mainWindow.GetPreviewWindow()->GetThumbnails().emplace_back(path.stem(), image);
 	}
 
+}
+
+void App::OnThumbnailSelect(const Thumbnail& thumbnail)
+{
+	m_mainWindow.GetCanvasWindow()->SetImage(thumbnail.m_name, thumbnail.m_image);
 }
 
 int main(int argc, char* argv[])

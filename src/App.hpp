@@ -17,6 +17,7 @@ class App
 		void Run();
 		bool LoadImage(const std::string& filepath);
 		void ComputeAndDisplayFilteredImages();
+		void OnThumbnailSelect(const Thumbnail& thumbnail);
 
 	private:
 		App();

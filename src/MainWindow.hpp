@@ -28,7 +28,6 @@ class MainWindow : public IWindow
 		std::shared_ptr<CanvasWindow> GetCanvasWindow();
 		std::shared_ptr<PreviewWindow> GetPreviewWindow();
 		std::shared_ptr<ProfilerWindow> GetProfilerWindow();
-		void OnThumbnailSelect(const Thumbnail& thumbnail);
 
 	private:
 		MainWindow();

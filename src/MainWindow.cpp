@@ -23,15 +23,10 @@ MainWindow::MainWindow() :
 	m_profilerWindow(std::make_shared<ProfilerWindow>()),
 	m_filterParamsWindow(std::make_shared<FilterParamsWindow>())
 {
-	using namespace std::placeholders;
-
 	m_windows.push_back(std::static_pointer_cast<IWindow>(m_canvasWindow));
 	m_windows.push_back(std::static_pointer_cast<IWindow>(m_previewWindow));
 	m_windows.push_back(std::static_pointer_cast<IWindow>(m_profilerWindow));
 	m_windows.push_back(std::static_pointer_cast<IWindow>(m_filterParamsWindow));
-
-	PreviewWindow::ThumbnailSelectFunction thumbnailSelectCallback = std::bind(&MainWindow::OnThumbnailSelect, this, _1);
-	m_previewWindow->AddThumbnailSelectCallback(thumbnailSelectCallback);
 
 	glfwSetErrorCallback(MainWindow::ErrorCallback);
 
@@ -191,7 +186,3 @@ std::shared_ptr<PreviewWindow> MainWindow::GetPreviewWindow() { return m_preview
 
 std::shared_ptr<ProfilerWindow> MainWindow::GetProfilerWindow() { return m_profilerWindow; }
 
-void MainWindow::OnThumbnailSelect(const Thumbnail& thumbnail)
-{
-	m_canvasWindow->SetImage(thumbnail.m_name, thumbnail.m_image);
-}
