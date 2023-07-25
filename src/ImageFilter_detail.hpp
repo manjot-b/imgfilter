@@ -3,23 +3,34 @@
 #include <vector>
 
 #include "Image.hpp"
+#include "ProfilerInfo.hpp"
 
 namespace ImageFilter { namespace detail {
-std::vector<uchar> computeGrayScale(const uchar* d_inImage, std::shared_ptr<const Image> originalImage, dim3 blockDim, dim3 gridDim);
+std::vector<uchar> computeGrayScale(
+		const uchar* d_inImage,
+		std::shared_ptr<const Image> originalImage,
+		dim3 blockDim,
+		dim3 gridDim,
+		ProfilerInfo& profilerInfo
+);
 
 std::vector<uchar> computeSepia(
 		const uchar* d_inImage,
 		std::shared_ptr<const Image> originalImage,
 		float k,
 		dim3 blockDim,
-		dim3 gridDim);
+		dim3 gridDim,
+		ProfilerInfo& profilerInfo
+);
 
 std::vector<uchar> computeBoxBlur(
 		const uchar* d_paddedInImage,
 		std::shared_ptr<const Image> originalImage,
 		uint filterDim,
 		dim3 blockDim,
-		dim3 gridDim);
+		dim3 gridDim,
+		ProfilerInfo& profilerInfo
+);
 
 std::vector<uchar> computeGaussianBlur(
 		const uchar* d_paddedInImage,
@@ -27,7 +38,9 @@ std::vector<uchar> computeGaussianBlur(
 		float sigma,
 		uint filterDim,
 		dim3 blockDim,
-		dim3 gridDim);
+		dim3 gridDim,
+		ProfilerInfo& profilerInfo
+);
 
 std::vector<uchar> padRepeatEdge(std::shared_ptr<const Image> image, uint2 filterDim, uint& width, uint& height);
 
