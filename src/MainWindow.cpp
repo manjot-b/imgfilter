@@ -89,7 +89,7 @@ void MainWindow::Render(FilterParams& filterParams)
 		window->Render(filterParams);
 	}
 
-	bool showImGuiDemo = false;
+	bool showImGuiDemo = true;
 	if (showImGuiDemo == true)
 	{
 		// show ImGui demo

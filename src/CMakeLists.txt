@@ -16,6 +16,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
 	MainWindow.hpp
 	PreviewWindow.cpp
 	PreviewWindow.hpp
+	ProfilerInfo.cpp
 	ProfilerInfo.hpp
 	ProfilerWindow.cpp
 	ProfilerWindow.hpp
