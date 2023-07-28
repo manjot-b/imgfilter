@@ -8,18 +8,18 @@
 #include "Image.hpp"
 #include "IWindow.hpp"
 
-struct Thumbnail
-{
-	Thumbnail();
-	Thumbnail(const std::string& name, std::shared_ptr<const Image> image) :
-		m_name(name), m_image(image) {}
-	std::string m_name;
-	std::shared_ptr<const Image> m_image;
-};
-
 class PreviewWindow : public IWindow
 {
 	public:
+		struct Thumbnail
+		{
+			Thumbnail();
+			Thumbnail(const std::string& name, std::shared_ptr<const Image> image) :
+				m_name(name), m_image(image) {}
+			std::string m_name;
+			std::shared_ptr<const Image> m_image;
+		};
+
 		PreviewWindow();
 		virtual void Render(FilterParams& filterParams) override;	
 		void AddThumbnail(const std::string& name, std::shared_ptr<const Image> image);

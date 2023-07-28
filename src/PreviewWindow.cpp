@@ -78,7 +78,7 @@ size_t PreviewWindow::CountThumbnails()
 	return m_thumbnails.size();
 }
 
-const Thumbnail& PreviewWindow::ThumbnailAt(size_t pos)
+const PreviewWindow::Thumbnail& PreviewWindow::ThumbnailAt(size_t pos)
 {
 	return m_thumbnails[pos];
 }

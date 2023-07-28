@@ -88,7 +88,7 @@ void App::ComputeAndDisplayFilteredImages()
 
 	if (m_lastSelectedThumbnailIdx < previewWindow->CountThumbnails())
 	{
-		const Thumbnail& thumbnail = previewWindow->ThumbnailAt(m_lastSelectedThumbnailIdx);
+		const PreviewWindow::Thumbnail& thumbnail = previewWindow->ThumbnailAt(m_lastSelectedThumbnailIdx);
 		title = thumbnail.m_name;
 		displayImage = thumbnail.m_image;
 	}
@@ -100,7 +100,7 @@ void App::ComputeAndDisplayFilteredImages()
 	m_mainWindow.GetCanvasWindow()->SetImage(title, displayImage);
 }
 
-void App::OnThumbnailSelect(const Thumbnail& thumbnail, uint index)
+void App::OnThumbnailSelect(const PreviewWindow::Thumbnail& thumbnail, uint index)
 {
 	m_mainWindow.GetCanvasWindow()->SetImage(thumbnail.m_name, thumbnail.m_image);
 	m_lastSelectedThumbnailIdx = index;
