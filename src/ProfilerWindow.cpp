@@ -27,17 +27,15 @@ void ProfilerWindow::Render(FilterParams& filterParams)
 			ImGui::TableNextRow();
 			ImGui::TableNextColumn();
 
-			const std::string& imageName = std::get<0>(namedProfiler);
-			ImGui::Text("%s", imageName.c_str());
+			ImGui::Text("%s", namedProfiler.m_name.c_str());
 
 			for (uint i = 0; i < static_cast<uint>(ProfilerTimes::LAST); ++i)
 			{
 				ImGui::TableNextColumn();
 
-				const ProfilerInfo& profilerInfo = std::get<1>(namedProfiler);
-				auto profilerInfoItr = profilerInfo.find(static_cast<ProfilerTimes>(i));
+				auto profilerInfoItr = namedProfiler.m_profilerInfo.find(static_cast<ProfilerTimes>(i));
 
-				if (profilerInfoItr != profilerInfo.end())
+				if (profilerInfoItr != namedProfiler.m_profilerInfo.end())
 				{
 					ImGui::Text("%.3f", profilerInfoItr->second);
 				}
@@ -56,7 +54,7 @@ void ProfilerWindow::Render(FilterParams& filterParams)
 
 void ProfilerWindow::AddImageProfiler(const std::string& name, const ProfilerInfo& profilerInfo)
 {
-	m_profilerInfos.push_back(std::make_tuple(name, profilerInfo));
+	m_profilerInfos.emplace_back(name, profilerInfo);
 }
 
 void ProfilerWindow::ClearImageProfilers() { m_profilerInfos.clear(); }

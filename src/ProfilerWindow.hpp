@@ -2,7 +2,6 @@
 
 #include "IWindow.hpp"
 
-#include <tuple>
 #include <vector>
 
 #include "ProfilerInfo.hpp"
@@ -10,7 +9,13 @@
 class ProfilerWindow : public IWindow
 {
 	public:
-		using NamedProfilerInfo = std::tuple<std::string, ProfilerInfo>;
+		struct NamedProfilerInfo
+		{
+			NamedProfilerInfo(const std::string& name, const ProfilerInfo& profilerInfo) :
+				m_name(name), m_profilerInfo(profilerInfo) {}
+			std::string m_name;
+			ProfilerInfo m_profilerInfo;
+		};
 		ProfilerWindow();
 		virtual void Render(FilterParams& filterParams) override;	
 
