@@ -70,18 +70,17 @@ void App::ComputeAndDisplayFilteredImages()
 
 	// Extract the stem of the filename from the image. Then, use it to create a thumbnail.
 	// The stem is expected to be unique.
-	auto filteredImages = ImageFilter::GetFilteredImages(m_originalImage, m_filterParams);
+	auto filteredImageResults = ImageFilter::GetFilteredImages(m_originalImage, m_filterParams);
 
 	m_mainWindow.GetProfilerWindow()->ClearImageProfilers();
 
-	for (const auto& imageData : filteredImages)
+	for (const auto& filteredResult : filteredImageResults)
 	{
-		std::shared_ptr<Image> image = std::get<0>(imageData);	
+		std::shared_ptr<Image> image = filteredResult.m_image;	
 		std::filesystem::path path(image->GetFilename());
 		previewWindow->AddThumbnail(path.stem(), image);
 
-		const ProfilerInfo& profilerInfo = std::get<1>(imageData);
-		m_mainWindow.GetProfilerWindow()->AddImageProfiler(path.stem(), profilerInfo);
+		m_mainWindow.GetProfilerWindow()->AddImageProfiler(path.stem(), filteredResult.m_profilerInfo);
 	}
 
 	std::string title;

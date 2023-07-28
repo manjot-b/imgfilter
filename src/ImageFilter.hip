@@ -152,7 +152,7 @@ inline void HIPCheck(hipError_t error)
 	}
 }
 
-std::vector<ImageProfile> GetFilteredImages(
+std::vector<FilteredImageResult> GetFilteredImages(
 		std::shared_ptr<const Image> originalImage,
 		FilterParams& filterParams)
 {
@@ -182,33 +182,35 @@ std::vector<ImageProfile> GetFilteredImages(
 	dim3 blockDim = dim3(threads, 1, 1);
 	dim3 gridDim = dim3((pixels + threads - 1) / threads, 1, 1);	// ceiling(pixels / threads)
 
-	std::vector<ImageProfile> filteredImages;
+	std::vector<FilteredImageResult> filteredImages;
 	std::vector<uchar> outImageData;
 	ProfilerInfo profilerInfo;
 
 	outImageData = computeGrayScale(d_inImage, originalImage, blockDim, gridDim, profilerInfo);
 	profilerInfo[ProfilerTimes::MemCopyHostToDevice] = memCopyElapsed;
-	filteredImages.push_back(std::make_tuple(
+	filteredImages.emplace_back(
 				std::make_shared<Image>(
 					"imgs/gray.png",
 					std::move(outImageData),
 					originalImage->GetWidth(),
 					originalImage->GetHeight(),
-					originalImage->GetComponents()),
+					originalImage->GetComponents()
+				),
 				profilerInfo
-	));
+	);
 
 	outImageData = computeSepia(d_inImage, originalImage, filterParams.m_sepia.k, blockDim, gridDim, profilerInfo);
 	profilerInfo[ProfilerTimes::MemCopyHostToDevice] = memCopyElapsed;
-	filteredImages.push_back(std::make_tuple(
+	filteredImages.emplace_back(
 				std::make_shared<Image>(
 					"imgs/sepia.png",
 					std::move(outImageData),
 					originalImage->GetWidth(),
 					originalImage->GetHeight(),
-					originalImage->GetComponents()),
+					originalImage->GetComponents()
+				),
 				profilerInfo
-	));
+	);
 
 	HIPCheck(hipFree(d_inImage));
 
@@ -242,22 +244,23 @@ std::vector<ImageProfile> GetFilteredImages(
 				paddedHeight,
 				originalImage->GetComponents()
 	);
-	filteredImages.push_back(std::make_tuple(paddedImage, ProfilerInfo()));
+	filteredImages.emplace_back(paddedImage, ProfilerInfo());
 
 	outImageData = computeBoxBlur(d_paddedInImage, originalImage, filterDim.x, blockDim, gridDim, profilerInfo);
 	profilerInfo[ProfilerTimes::MemCopyHostToDevice] = memCopyElapsed;
 
 	std::stringstream ss;
 	ss << "imgs/box_blur_" << filterDim.x << "x" << filterDim.x << ".png";
-	filteredImages.push_back(std::make_tuple(
+	filteredImages.emplace_back(
 				std::make_shared<Image>(
 					ss.str(),
 					std::move(outImageData),
 					originalImage->GetWidth(),   // The size of the image remains the same
 					originalImage->GetHeight(),
-					originalImage->GetComponents()),
+					originalImage->GetComponents()
+				),
 				profilerInfo
-	));
+	);
 	// The next filter may need a different sized padded image, so free the current one.
 	HIPCheck(hipFree(d_paddedInImage));
 
@@ -292,15 +295,16 @@ std::vector<ImageProfile> GetFilteredImages(
 
 	ss.clear();
 	ss << "imgs/gaus_blur_" << gausFilterDim.x << "x" << gausFilterDim.x << ".png";
-	filteredImages.push_back(std::make_tuple(
+	filteredImages.emplace_back(
 				std::make_shared<Image>(
 					ss.str(),
 					std::move(outImageData),
 					originalImage->GetWidth(),
 					originalImage->GetHeight(),
-					originalImage->GetComponents()),
+					originalImage->GetComponents()
+				),
 				profilerInfo
-	));
+	);
 	HIPCheck(hipFree(d_paddedInImage));
 
 	HIPCheck(hipEventDestroy(memCopyStart));
