@@ -64,9 +64,9 @@ void App::ComputeAndDisplayFilteredImages()
 {
 	std::filesystem::path originalPath = std::filesystem::path(m_originalImage->GetFilename());
 
-	std::vector<Thumbnail>& thumbnails = m_mainWindow.GetPreviewWindow()->GetThumbnails();
-	thumbnails.clear();
-	thumbnails.emplace_back(originalPath.stem(), m_originalImage);
+	std::shared_ptr<PreviewWindow> previewWindow = m_mainWindow.GetPreviewWindow();
+	previewWindow->ClearThumbnails();
+	previewWindow->AddThumbnail(originalPath.stem(), m_originalImage);
 
 	// Extract the stem of the filename from the image. Then, use it to create a thumbnail.
 	// The stem is expected to be unique.
@@ -78,19 +78,20 @@ void App::ComputeAndDisplayFilteredImages()
 	{
 		std::shared_ptr<Image> image = std::get<0>(imageData);	
 		std::filesystem::path path(image->GetFilename());
-		thumbnails.emplace_back(path.stem(), image);
+		previewWindow->AddThumbnail(path.stem(), image);
 
 		const ProfilerInfo& profilerInfo = std::get<1>(imageData);
 		m_mainWindow.GetProfilerWindow()->AddImageProfiler(path.stem(), profilerInfo);
 	}
 
 	std::string title;
-	std::shared_ptr<Image> displayImage;
+	std::shared_ptr<const Image> displayImage;
 
-	if (m_lastSelectedThumbnailIdx < thumbnails.size())
+	if (m_lastSelectedThumbnailIdx < previewWindow->CountThumbnails())
 	{
-		title = thumbnails[m_lastSelectedThumbnailIdx].m_name;
-		displayImage = thumbnails[m_lastSelectedThumbnailIdx].m_image;
+		const Thumbnail& thumbnail = previewWindow->ThumbnailAt(m_lastSelectedThumbnailIdx);
+		title = thumbnail.m_name;
+		displayImage = thumbnail.m_image;
 	}
 	else
 	{

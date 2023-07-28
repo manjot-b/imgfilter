@@ -45,11 +45,9 @@ void PreviewWindow::Render(FilterParams& filterParams)
 	ImGui::End();
 }
 
-std::vector<Thumbnail>& PreviewWindow::GetThumbnails() { return m_thumbnails; }
-
 ImVec2 PreviewWindow::calcThumbnailSize(const Thumbnail& thumbnail)
 {
-	std::shared_ptr<Image> image = thumbnail.m_image;
+	std::shared_ptr<const Image> image = thumbnail.m_image;
 
 	float thumbnailWidth = m_maxThumbnailWidth;
 	float thumbnailHeight = (thumbnailWidth / image->GetWidth()) * image->GetHeight();
@@ -62,6 +60,27 @@ ImVec2 PreviewWindow::calcThumbnailSize(const Thumbnail& thumbnail)
 	}
 
 	return ImVec2(thumbnailWidth, thumbnailHeight);
+}
+
+
+void PreviewWindow::AddThumbnail(const std::string& name, std::shared_ptr<const Image> image)
+{
+	m_thumbnails.emplace_back(name, image);
+}
+
+void PreviewWindow::ClearThumbnails()
+{
+	m_thumbnails.clear();
+}
+
+size_t PreviewWindow::CountThumbnails()
+{
+	return m_thumbnails.size();
+}
+
+const Thumbnail& PreviewWindow::ThumbnailAt(size_t pos)
+{
+	return m_thumbnails[pos];
 }
 
 void PreviewWindow::AddThumbnailSelectCallback(ThumbnailSelectFunction callback)

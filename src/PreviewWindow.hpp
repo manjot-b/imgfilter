@@ -11,10 +11,10 @@
 struct Thumbnail
 {
 	Thumbnail();
-	Thumbnail(const std::string& name, std::shared_ptr<Image> image) :
+	Thumbnail(const std::string& name, std::shared_ptr<const Image> image) :
 		m_name(name), m_image(image) {}
 	std::string m_name;
-	std::shared_ptr<Image> m_image;
+	std::shared_ptr<const Image> m_image;
 };
 
 class PreviewWindow : public IWindow
@@ -22,7 +22,10 @@ class PreviewWindow : public IWindow
 	public:
 		PreviewWindow();
 		virtual void Render(FilterParams& filterParams) override;	
-		std::vector<Thumbnail>& GetThumbnails();
+		void AddThumbnail(const std::string& name, std::shared_ptr<const Image> image);
+		void ClearThumbnails();
+		size_t CountThumbnails();
+		const Thumbnail& ThumbnailAt(size_t pos);
 
 		using ThumbnailSelectFunction = std::function<void(const Thumbnail& thumbnail, uint index)>;
 		void AddThumbnailSelectCallback(ThumbnailSelectFunction callback);
