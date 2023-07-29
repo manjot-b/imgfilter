@@ -19,7 +19,8 @@ __global__ void GrayScaleFilter(
 		const uchar* inImage,
 		uchar* outImage,
 		unsigned int pixels,
-		unsigned int components)
+		unsigned int components
+)
 {
 	const unsigned int PIXEL_OFFSET = (blockIdx.x * blockDim.x + threadIdx.x) * components;
 	const unsigned int TOTAL_BYTES = pixels * components;
@@ -45,7 +46,8 @@ __global__ void SepiaFilter(
 		uchar* outImage,
 		unsigned int pixels,
 		unsigned int components,
-		float k)
+		float k
+)
 {
 	const unsigned int PIXEL_OFFSET = (blockIdx.x * blockDim.x + threadIdx.x) * components;
 	const unsigned int TOTAL_BYTES = pixels * components;
@@ -94,7 +96,8 @@ __global__ void NonSeperableConvolution(
 		uint2 originalDim,
 		uint components,
 		float* filter,
-		uint2 filterDim)
+		uint2 filterDim
+)
 {
 	// NOTE: Bug on Radeon RX 580 gfx803. Cannot set uint2 variable to const.
 	const uint filterRadiusX = filterDim.x / 2;
@@ -154,7 +157,8 @@ inline void HIPCheck(hipError_t error)
 
 std::vector<FilteredImageResult> GetFilteredImages(
 		std::shared_ptr<const Image> originalImage,
-		FilterParams& filterParams)
+		FilterParams& filterParams
+)
 {
 	using namespace detail;
 
@@ -402,7 +406,8 @@ std::vector<uchar> computeSepia(
 		const uchar* d_inImage,
 		std::shared_ptr<const Image> originalImage,
 		float k,
-		dim3 blockDim, dim3 gridDim
+		dim3 blockDim,
+		dim3 gridDim
 )
 {
 	return generalKernelCompute(
