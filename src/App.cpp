@@ -6,7 +6,7 @@
 #include "ImageFilter.hpp"
 #include "PreviewWindow.hpp"
 
-App::App() : m_mainWindow(MainWindow::Get()), m_lastSelectedThumbnailIdx(0)
+App::App() : m_mainWindow(MainWindow::Get()), m_lastSelectedThumbnailFilter(ImageFilter::Filter::None)
 {
 	// Create the main window so the the GLFW and OpenGL contexts
 	// get created before using them.
@@ -65,8 +65,7 @@ void App::ComputeAndDisplayFilteredImages()
 	std::filesystem::path originalPath = std::filesystem::path(m_originalImage->GetFilename());
 
 	std::shared_ptr<PreviewWindow> previewWindow = m_mainWindow.GetPreviewWindow();
-	previewWindow->ClearThumbnails();
-	previewWindow->AddThumbnail(originalPath.stem(), m_originalImage);
+	previewWindow->ReplaceThumbnail(ImageFilter::Filter::None, originalPath.stem(), m_originalImage);
 
 	// Extract the stem of the filename from the image. Then, use it to create a thumbnail.
 	// The stem is expected to be unique.
@@ -76,34 +75,22 @@ void App::ComputeAndDisplayFilteredImages()
 
 	for (const auto& filteredResult : filteredImageResults)
 	{
+		ImageFilter::Filter filter = filteredResult.m_filter;
 		std::shared_ptr<Image> image = filteredResult.m_image;	
 		std::filesystem::path path(image->GetFilename());
-		previewWindow->AddThumbnail(path.stem(), image);
+		previewWindow->ReplaceThumbnail(filter, path.stem(), image);
 
 		m_mainWindow.GetProfilerWindow()->AddImageProfiler(path.stem(), filteredResult.m_profilerInfo);
 	}
 
-	std::string title;
-	std::shared_ptr<const Image> displayImage;
-
-	if (m_lastSelectedThumbnailIdx < previewWindow->CountThumbnails())
-	{
-		const PreviewWindow::Thumbnail& thumbnail = previewWindow->ThumbnailAt(m_lastSelectedThumbnailIdx);
-		title = thumbnail.m_name;
-		displayImage = thumbnail.m_image;
-	}
-	else
-	{
-		title = originalPath.stem();
-		displayImage = m_originalImage;
-	}
-	m_mainWindow.GetCanvasWindow()->SetImage(title, displayImage);
+	const PreviewWindow::Thumbnail& thumbnail = previewWindow->ThumbnailAt(m_lastSelectedThumbnailFilter);
+	m_mainWindow.GetCanvasWindow()->SetImage(thumbnail.m_name, thumbnail.m_image);
 }
 
-void App::OnThumbnailSelect(const PreviewWindow::Thumbnail& thumbnail, uint index)
+void App::OnThumbnailSelect(const PreviewWindow::Thumbnail& thumbnail, ImageFilter::Filter filter)
 {
 	m_mainWindow.GetCanvasWindow()->SetImage(thumbnail.m_name, thumbnail.m_image);
-	m_lastSelectedThumbnailIdx = index;
+	m_lastSelectedThumbnailFilter = filter;
 }
 
 int main(int argc, char* argv[])

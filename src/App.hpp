@@ -3,8 +3,9 @@
 #include <memory>
 #include <string>
 
-#include "Image.hpp"
 #include "FilterParams.hpp"
+#include "Image.hpp"
+#include "ImageFilter.hpp"
 #include "MainWindow.hpp"
 
 class App
@@ -17,13 +18,13 @@ class App
 		void Run();
 		bool LoadImage(const std::string& filepath);
 		void ComputeAndDisplayFilteredImages();
-		void OnThumbnailSelect(const PreviewWindow::Thumbnail& thumbnail, uint index);
+		void OnThumbnailSelect(const PreviewWindow::Thumbnail& thumbnail, ImageFilter::Filter filter);
 
 	private:
 		App();
 		MainWindow& m_mainWindow;
 		std::shared_ptr<Image> m_originalImage;
-		uint m_lastSelectedThumbnailIdx;
+		ImageFilter::Filter m_lastSelectedThumbnailFilter;
 		FilterParams m_filterParams;
 		FilterParams m_prevfilterParams;
 };

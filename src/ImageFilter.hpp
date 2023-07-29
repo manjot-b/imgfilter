@@ -9,9 +9,20 @@
 
 namespace ImageFilter
 {
+	enum class Filter
+	{
+		None,
+		Grayscale,
+		Sepia,
+		Padding, // Technically not a filter.
+		BoxBlur,
+		GaussianBlur
+	};
+
 	struct FilteredImageResult {
-		FilteredImageResult(std::shared_ptr<Image> image, ProfilerInfo profilerInfo) :
-			m_image(image), m_profilerInfo(profilerInfo) {}
+		FilteredImageResult(Filter filter, std::shared_ptr<Image> image, ProfilerInfo profilerInfo) :
+			m_filter(filter), m_image(image), m_profilerInfo(profilerInfo) {}
+		Filter m_filter;
 		std::shared_ptr<Image> m_image;
 		ProfilerInfo m_profilerInfo;
 	};

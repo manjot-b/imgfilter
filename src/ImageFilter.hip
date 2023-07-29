@@ -189,6 +189,7 @@ std::vector<FilteredImageResult> GetFilteredImages(
 	outImageData = computeGrayScale(d_inImage, originalImage, blockDim, gridDim, profilerInfo);
 	profilerInfo[ProfilerTimes::MemCopyHostToDevice] = memCopyElapsed;
 	filteredImages.emplace_back(
+				Filter::Grayscale,
 				std::make_shared<Image>(
 					"imgs/gray.png",
 					std::move(outImageData),
@@ -202,6 +203,7 @@ std::vector<FilteredImageResult> GetFilteredImages(
 	outImageData = computeSepia(d_inImage, originalImage, filterParams.m_sepia.k, blockDim, gridDim, profilerInfo);
 	profilerInfo[ProfilerTimes::MemCopyHostToDevice] = memCopyElapsed;
 	filteredImages.emplace_back(
+				Filter::Sepia,
 				std::make_shared<Image>(
 					"imgs/sepia.png",
 					std::move(outImageData),
@@ -244,7 +246,7 @@ std::vector<FilteredImageResult> GetFilteredImages(
 				paddedHeight,
 				originalImage->GetComponents()
 	);
-	filteredImages.emplace_back(paddedImage, ProfilerInfo());
+	filteredImages.emplace_back(Filter::Padding, paddedImage, ProfilerInfo());
 
 	outImageData = computeBoxBlur(d_paddedInImage, originalImage, filterDim.x, blockDim, gridDim, profilerInfo);
 	profilerInfo[ProfilerTimes::MemCopyHostToDevice] = memCopyElapsed;
@@ -252,6 +254,7 @@ std::vector<FilteredImageResult> GetFilteredImages(
 	std::stringstream ss;
 	ss << "imgs/box_blur_" << filterDim.x << "x" << filterDim.x << ".png";
 	filteredImages.emplace_back(
+				Filter::BoxBlur,
 				std::make_shared<Image>(
 					ss.str(),
 					std::move(outImageData),
@@ -296,6 +299,7 @@ std::vector<FilteredImageResult> GetFilteredImages(
 	ss.clear();
 	ss << "imgs/gaus_blur_" << gausFilterDim.x << "x" << gausFilterDim.x << ".png";
 	filteredImages.emplace_back(
+				Filter::GaussianBlur,
 				std::make_shared<Image>(
 					ss.str(),
 					std::move(outImageData),

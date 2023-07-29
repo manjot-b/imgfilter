@@ -1,5 +1,7 @@
 #include "PreviewWindow.hpp"
 
+#include "ImageFilter.hpp"
+
 PreviewWindow::PreviewWindow() :
 	IWindow("Preview"),
 	m_maxThumbnailWidth(96),
@@ -19,9 +21,10 @@ void PreviewWindow::Render(FilterParams& filterParams)
 	ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, cellPadding);
 	if (ImGui::BeginTable("Thumbnails", columns))
 	{
-		for (uint i = 0; i < m_thumbnails.size(); ++i)
+		for (const auto& filterThumbnail : m_thumbnails)
 		{
-			const auto& thumbnail = m_thumbnails[i];
+			ImageFilter::Filter filter = filterThumbnail.first;
+			const Thumbnail& thumbnail = filterThumbnail.second;
 			ImGui::TableNextColumn();
 
 			ImVec2 thumbnailSize = calcThumbnailSize(thumbnail);
@@ -33,7 +36,7 @@ void PreviewWindow::Render(FilterParams& filterParams)
 			if (buttonPressed == true)
 			{
 
-				notifyThumbnailSelect(thumbnail, i);
+				notifyThumbnailSelect(thumbnail, filter);
 			}
 
 			ImGui::Text("%s", thumbnail.m_name.c_str());
@@ -63,9 +66,9 @@ ImVec2 PreviewWindow::calcThumbnailSize(const Thumbnail& thumbnail)
 }
 
 
-void PreviewWindow::AddThumbnail(const std::string& name, std::shared_ptr<const Image> image)
+void PreviewWindow::ReplaceThumbnail(ImageFilter::Filter filter, const std::string& name, std::shared_ptr<const Image> image)
 {
-	m_thumbnails.emplace_back(name, image);
+	m_thumbnails[filter] = Thumbnail(name, image);
 }
 
 void PreviewWindow::ClearThumbnails()
@@ -78,9 +81,9 @@ size_t PreviewWindow::CountThumbnails()
 	return m_thumbnails.size();
 }
 
-const PreviewWindow::Thumbnail& PreviewWindow::ThumbnailAt(size_t pos)
+const PreviewWindow::Thumbnail& PreviewWindow::ThumbnailAt(ImageFilter::Filter filter)
 {
-	return m_thumbnails[pos];
+	return m_thumbnails.at(filter);
 }
 
 void PreviewWindow::AddThumbnailSelectCallback(ThumbnailSelectFunction callback)
@@ -88,10 +91,10 @@ void PreviewWindow::AddThumbnailSelectCallback(ThumbnailSelectFunction callback)
 	m_thumbnailSelectCallbacks.push_back(callback);
 }
 
-void PreviewWindow::notifyThumbnailSelect(const Thumbnail& thumbnail, uint index)
+void PreviewWindow::notifyThumbnailSelect(const Thumbnail& thumbnail, ImageFilter::Filter filter)
 {
 	for (const auto& callback : m_thumbnailSelectCallbacks)
 	{
-		callback(thumbnail, index);
+		callback(thumbnail, filter);
 	}
 }
