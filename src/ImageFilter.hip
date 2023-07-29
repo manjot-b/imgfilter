@@ -186,6 +186,7 @@ std::vector<FilteredImageResult> GetFilteredImages(
 	std::vector<uchar> outImageData;
 	ProfilerInfo profilerInfo;
 
+	profilerInfo.clear();
 	outImageData = computeGrayScale(d_inImage, originalImage, blockDim, gridDim, profilerInfo);
 	profilerInfo[ProfilerTimes::MemCopyHostToDevice] = memCopyElapsed;
 	filteredImages.emplace_back(
@@ -200,6 +201,7 @@ std::vector<FilteredImageResult> GetFilteredImages(
 				profilerInfo
 	);
 
+	profilerInfo.clear();
 	outImageData = computeSepia(d_inImage, originalImage, filterParams.m_sepia.k, blockDim, gridDim, profilerInfo);
 	profilerInfo[ProfilerTimes::MemCopyHostToDevice] = memCopyElapsed;
 	filteredImages.emplace_back(
@@ -248,6 +250,7 @@ std::vector<FilteredImageResult> GetFilteredImages(
 	);
 	filteredImages.emplace_back(Filter::Padding, paddedImage, ProfilerInfo());
 
+	profilerInfo.clear();
 	outImageData = computeBoxBlur(d_paddedInImage, originalImage, filterDim.x, blockDim, gridDim, profilerInfo);
 	profilerInfo[ProfilerTimes::MemCopyHostToDevice] = memCopyElapsed;
 
@@ -285,6 +288,7 @@ std::vector<FilteredImageResult> GetFilteredImages(
 	HIPCheck(hipEventSynchronize(memCopyEnd));
 	HIPCheck(hipEventElapsedTime(&memCopyElapsed, memCopyStart, memCopyEnd));
 
+	profilerInfo.clear();
 	outImageData = computeGaussianBlur(
 			d_paddedInImage,
 			originalImage,
@@ -326,17 +330,41 @@ std::vector<uchar> computeGrayScale(
 		ProfilerInfo& profilerInfo
 )
 {
+	hipEvent_t eventStart, eventEnd;
+	HIPCheck(hipEventCreate(&eventStart));
+	HIPCheck(hipEventCreate(&eventEnd));
+
 	size_t pixels = originalImage->GetWidth() * originalImage->GetHeight();
 	size_t bytes = sizeof(uchar) * pixels * originalImage->GetComponents();
 
 	uchar* d_outImage = nullptr;
 	HIPCheck(hipMalloc(&d_outImage, bytes));
 
+	HIPCheck(hipEventRecord(eventStart, nullptr));
+
 	GrayScaleFilter<<<gridDim, blockDim, 0, hipStreamDefault>>>(d_inImage, d_outImage, pixels, originalImage->GetComponents());
 	HIPCheck(hipGetLastError());
 
+	HIPCheck(hipEventRecord(eventEnd, nullptr));
+	HIPCheck(hipEventSynchronize(eventEnd));
+
+	float elapsedTime;
+	HIPCheck(hipEventElapsedTime(&elapsedTime, eventStart, eventEnd));
+	profilerInfo[ProfilerTimes::KernelCompute] = elapsedTime;
+
 	std::vector<uchar> outImageData(bytes / sizeof(uchar));
+
+	HIPCheck(hipEventRecord(eventStart, nullptr));
+
 	HIPCheck(hipMemcpy(outImageData.data(), d_outImage, bytes, hipMemcpyDeviceToHost));
+
+	HIPCheck(hipEventRecord(eventEnd, nullptr));
+	HIPCheck(hipEventSynchronize(eventEnd));
+	HIPCheck(hipEventElapsedTime(&elapsedTime, eventStart, eventEnd));
+	profilerInfo[ProfilerTimes::MemCopyDeviceToHost] = elapsedTime;
+
+	HIPCheck(hipEventDestroy(eventStart));
+	HIPCheck(hipEventDestroy(eventEnd));
 	HIPCheck(hipFree(d_outImage));
 
 	return outImageData;
@@ -351,17 +379,41 @@ std::vector<uchar> computeSepia(
 		ProfilerInfo& profilerInfo
 )
 {
+	hipEvent_t eventStart, eventEnd;
+	HIPCheck(hipEventCreate(&eventStart));
+	HIPCheck(hipEventCreate(&eventEnd));
+
 	size_t pixels = originalImage->GetWidth() * originalImage->GetHeight();
 	size_t bytes = sizeof(uchar) * pixels * originalImage->GetComponents();
 
 	uchar* d_outImage = nullptr;
 	HIPCheck(hipMalloc(&d_outImage, bytes));
 
+	HIPCheck(hipEventRecord(eventStart, nullptr));
+
 	SepiaFilter<<<gridDim, blockDim, 0, hipStreamDefault>>>(d_inImage, d_outImage, pixels, originalImage->GetComponents(), k);
 	HIPCheck(hipGetLastError());
 
+	HIPCheck(hipEventRecord(eventEnd, nullptr));
+	HIPCheck(hipEventSynchronize(eventEnd));
+
+	float elapsedTime;
+	HIPCheck(hipEventElapsedTime(&elapsedTime, eventStart, eventEnd));
+	profilerInfo[ProfilerTimes::KernelCompute] = elapsedTime;
+
 	std::vector<uchar> outImageData(bytes / sizeof(uchar));
+
+	HIPCheck(hipEventRecord(eventStart, nullptr));
+
 	HIPCheck(hipMemcpy(outImageData.data(), d_outImage, bytes, hipMemcpyDeviceToHost));
+
+	HIPCheck(hipEventRecord(eventEnd, nullptr));
+	HIPCheck(hipEventSynchronize(eventEnd));
+	HIPCheck(hipEventElapsedTime(&elapsedTime, eventStart, eventEnd));
+	profilerInfo[ProfilerTimes::MemCopyDeviceToHost] = elapsedTime;
+
+	HIPCheck(hipEventDestroy(eventStart));
+	HIPCheck(hipEventDestroy(eventEnd));
 	HIPCheck(hipFree(d_outImage));
 
 	return outImageData;
@@ -376,6 +428,10 @@ std::vector<uchar> computeBoxBlur(
 		ProfilerInfo& profilerInfo
 )
 {
+	hipEvent_t eventStart, eventEnd;
+	HIPCheck(hipEventCreate(&eventStart));
+	HIPCheck(hipEventCreate(&eventEnd));
+
 	size_t pixels = originalImage->GetWidth() * originalImage->GetHeight();
 	size_t bytes = sizeof(uchar) * pixels * originalImage->GetComponents();
 
@@ -389,6 +445,8 @@ std::vector<uchar> computeBoxBlur(
 	HIPCheck(hipMalloc(&d_filter, sizeof(float) * filterSize));
 	HIPCheck(hipMemcpy(d_filter, filter.data(), sizeof(float) * filterSize, hipMemcpyHostToDevice));
 
+	HIPCheck(hipEventRecord(eventStart, nullptr));
+
 	NonSeperableConvolution<<<gridDim, blockDim, 0, hipStreamDefault>>>(
 			d_paddedInImage,
 			d_outImage,
@@ -399,9 +457,26 @@ std::vector<uchar> computeBoxBlur(
 	);
 	HIPCheck(hipGetLastError());
 
+	HIPCheck(hipEventRecord(eventEnd, nullptr));
+	HIPCheck(hipEventSynchronize(eventEnd));
+
+	float elapsedTime;
+	HIPCheck(hipEventElapsedTime(&elapsedTime, eventStart, eventEnd));
+	profilerInfo[ProfilerTimes::KernelCompute] = elapsedTime;
+
 	std::vector<uchar> outImageData(bytes / sizeof(uchar));
+
+	HIPCheck(hipEventRecord(eventStart, nullptr));
+
 	HIPCheck(hipMemcpy(outImageData.data(), d_outImage, bytes, hipMemcpyDeviceToHost));
 
+	HIPCheck(hipEventRecord(eventEnd, nullptr));
+	HIPCheck(hipEventSynchronize(eventEnd));
+	HIPCheck(hipEventElapsedTime(&elapsedTime, eventStart, eventEnd));
+	profilerInfo[ProfilerTimes::MemCopyDeviceToHost] = elapsedTime;
+
+	HIPCheck(hipEventDestroy(eventStart));
+	HIPCheck(hipEventDestroy(eventEnd));
 	HIPCheck(hipFree(d_filter));
 	HIPCheck(hipFree(d_outImage));
 
@@ -418,6 +493,10 @@ std::vector<uchar> computeGaussianBlur(
 		ProfilerInfo& profilerInfo
 )
 {
+	hipEvent_t eventStart, eventEnd;
+	HIPCheck(hipEventCreate(&eventStart));
+	HIPCheck(hipEventCreate(&eventEnd));
+
 	size_t pixels = originalImage->GetWidth() * originalImage->GetHeight();
 	size_t bytes = sizeof(uchar) * pixels * originalImage->GetComponents();
 
@@ -431,6 +510,8 @@ std::vector<uchar> computeGaussianBlur(
 	HIPCheck(hipMalloc(&d_filter, sizeof(float) * filterSize));
 	HIPCheck(hipMemcpy(d_filter, gausFilter.data(), sizeof(float) * filterSize, hipMemcpyHostToDevice));
 
+	HIPCheck(hipEventRecord(eventStart, nullptr));
+
 	NonSeperableConvolution<<<gridDim, blockDim, 0, hipStreamDefault>>>(
 			d_paddedInImage,
 			d_outImage,
@@ -441,9 +522,27 @@ std::vector<uchar> computeGaussianBlur(
 	);
 	HIPCheck(hipGetLastError());
 
+	HIPCheck(hipEventRecord(eventEnd, nullptr));
+	HIPCheck(hipEventSynchronize(eventEnd));
+
+	float elapsedTime;
+	HIPCheck(hipEventElapsedTime(&elapsedTime, eventStart, eventEnd));
+	profilerInfo[ProfilerTimes::KernelCompute] = elapsedTime;
+
 	std::vector<uchar> outImageData(bytes / sizeof(uchar));
+
+	HIPCheck(hipEventRecord(eventStart, nullptr));
+
 	HIPCheck(hipMemcpy(outImageData.data(), d_outImage, bytes, hipMemcpyDeviceToHost));
 
+	HIPCheck(hipEventRecord(eventEnd, nullptr));
+	HIPCheck(hipEventSynchronize(eventEnd));
+
+	HIPCheck(hipEventElapsedTime(&elapsedTime, eventStart, eventEnd));
+	profilerInfo[ProfilerTimes::MemCopyDeviceToHost] = elapsedTime;
+
+	HIPCheck(hipEventDestroy(eventStart));
+	HIPCheck(hipEventDestroy(eventEnd));
 	HIPCheck(hipFree(d_filter));
 	HIPCheck(hipFree(d_outImage));
 
