@@ -27,6 +27,15 @@ std::vector<uchar> generalKernelCompute(
 		Args... args
 );
 
+std::vector<uchar> nonSeperableKernelCompute(
+		ProfilerInfo& profilerInfo,
+		const uchar* d_paddedInImage,
+		std::shared_ptr<const Image> originalImage,
+		uint filterDim,
+		dim3 blockDim,
+		dim3 gridDim
+);
+
 std::vector<uchar> computeGrayScale(
 		ProfilerInfo& profilerInfo,
 		const uchar* d_inImage,
@@ -45,22 +54,22 @@ std::vector<uchar> computeSepia(
 );
 
 std::vector<uchar> computeBoxBlur(
+		ProfilerInfo& profilerInfo,
 		const uchar* d_paddedInImage,
 		std::shared_ptr<const Image> originalImage,
 		uint filterDim,
 		dim3 blockDim,
-		dim3 gridDim,
-		ProfilerInfo& profilerInfo
+		dim3 gridDim
 );
 
 std::vector<uchar> computeGaussianBlur(
+		ProfilerInfo& profilerInfo,
 		const uchar* d_paddedInImage,
 		std::shared_ptr<const Image> originalImage,
 		float sigma,
 		uint filterDim,
 		dim3 blockDim,
-		dim3 gridDim,
-		ProfilerInfo& profilerInfo
+		dim3 gridDim
 );
 
 std::vector<uchar> padRepeatEdge(std::shared_ptr<const Image> image, uint2 filterDim, uint& width, uint& height);
