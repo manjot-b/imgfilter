@@ -664,4 +664,6 @@ std::vector<float> generateGaussianFilter(float sigma, uint dim)
 
 	return filter;
 }
-}} // namespace ImageFIlter
+
+} // namespace Detail
+} // namespace ImageFilter
