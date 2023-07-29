@@ -6,21 +6,42 @@
 #include "ProfilerInfo.hpp"
 
 namespace ImageFilter { namespace detail {
-std::vector<uchar> computeGrayScale(
+
+template <class... Args>
+using GeneralKernelComputeFunction = void (*) (
+		const uchar* inImage,
+		uchar* outImage,
+		uint pixels,
+		uint components,
+		Args... args
+);
+
+template <class... Args>
+std::vector<uchar> generalKernelCompute(
+		ProfilerInfo& profilerInfo,
 		const uchar* d_inImage,
 		std::shared_ptr<const Image> originalImage,
 		dim3 blockDim,
 		dim3 gridDim,
-		ProfilerInfo& profilerInfo
+		GeneralKernelComputeFunction<Args...> kernelComputeFunction,
+		Args... args
+);
+
+std::vector<uchar> computeGrayScale(
+		ProfilerInfo& profilerInfo,
+		const uchar* d_inImage,
+		std::shared_ptr<const Image> originalImage,
+		dim3 blockDim,
+		dim3 gridDim
 );
 
 std::vector<uchar> computeSepia(
+		ProfilerInfo& profilerInfo,
 		const uchar* d_inImage,
 		std::shared_ptr<const Image> originalImage,
 		float k,
 		dim3 blockDim,
-		dim3 gridDim,
-		ProfilerInfo& profilerInfo
+		dim3 gridDim
 );
 
 std::vector<uchar> computeBoxBlur(

@@ -186,8 +186,7 @@ std::vector<FilteredImageResult> GetFilteredImages(
 	std::vector<uchar> outImageData;
 	ProfilerInfo profilerInfo;
 
-	profilerInfo.clear();
-	outImageData = computeGrayScale(d_inImage, originalImage, blockDim, gridDim, profilerInfo);
+	outImageData = computeGrayScale(profilerInfo, d_inImage, originalImage, blockDim, gridDim);
 	profilerInfo[ProfilerTimes::MemCopyHostToDevice] = memCopyElapsed;
 	filteredImages.emplace_back(
 				Filter::Grayscale,
@@ -201,8 +200,7 @@ std::vector<FilteredImageResult> GetFilteredImages(
 				profilerInfo
 	);
 
-	profilerInfo.clear();
-	outImageData = computeSepia(d_inImage, originalImage, filterParams.m_sepia.k, blockDim, gridDim, profilerInfo);
+	outImageData = computeSepia(profilerInfo, d_inImage, originalImage, filterParams.m_sepia.k, blockDim, gridDim);
 	profilerInfo[ProfilerTimes::MemCopyHostToDevice] = memCopyElapsed;
 	filteredImages.emplace_back(
 				Filter::Sepia,
@@ -322,14 +320,20 @@ std::vector<FilteredImageResult> GetFilteredImages(
 }
 
 namespace detail {
-std::vector<uchar> computeGrayScale(
+
+template <class... Args>
+std::vector<uchar> generalKernelCompute(
+		ProfilerInfo& profilerInfo,
 		const uchar* d_inImage,
 		std::shared_ptr<const Image> originalImage,
 		dim3 blockDim,
 		dim3 gridDim,
-		ProfilerInfo& profilerInfo
+		GeneralKernelComputeFunction<Args...> kernelComputeFunction,
+		Args... args
 )
 {
+	profilerInfo.clear();
+
 	hipEvent_t eventStart, eventEnd;
 	HIPCheck(hipEventCreate(&eventStart));
 	HIPCheck(hipEventCreate(&eventEnd));
@@ -342,7 +346,12 @@ std::vector<uchar> computeGrayScale(
 
 	HIPCheck(hipEventRecord(eventStart, nullptr));
 
-	GrayScaleFilter<<<gridDim, blockDim, 0, hipStreamDefault>>>(d_inImage, d_outImage, pixels, originalImage->GetComponents());
+	kernelComputeFunction<<<gridDim, blockDim, 0, hipStreamDefault>>>(
+			d_inImage,
+			d_outImage,
+			pixels,
+			originalImage->GetComponents(),
+			args...);
 	HIPCheck(hipGetLastError());
 
 	HIPCheck(hipEventRecord(eventEnd, nullptr));
@@ -370,53 +379,41 @@ std::vector<uchar> computeGrayScale(
 	return outImageData;
 }
 
+std::vector<uchar> computeGrayScale(
+		ProfilerInfo& profilerInfo,
+		const uchar* d_inImage,
+		std::shared_ptr<const Image> originalImage,
+		dim3 blockDim,
+		dim3 gridDim
+)
+{
+	return generalKernelCompute(
+		profilerInfo,
+		d_inImage,
+		originalImage,
+		blockDim,
+		gridDim,
+		GrayScaleFilter
+	);
+}
+
 std::vector<uchar> computeSepia(
+		ProfilerInfo& profilerInfo,
 		const uchar* d_inImage,
 		std::shared_ptr<const Image> originalImage,
 		float k,
-		dim3 blockDim,
-		dim3 gridDim,
-		ProfilerInfo& profilerInfo
+		dim3 blockDim, dim3 gridDim
 )
 {
-	hipEvent_t eventStart, eventEnd;
-	HIPCheck(hipEventCreate(&eventStart));
-	HIPCheck(hipEventCreate(&eventEnd));
-
-	size_t pixels = originalImage->GetWidth() * originalImage->GetHeight();
-	size_t bytes = sizeof(uchar) * pixels * originalImage->GetComponents();
-
-	uchar* d_outImage = nullptr;
-	HIPCheck(hipMalloc(&d_outImage, bytes));
-
-	HIPCheck(hipEventRecord(eventStart, nullptr));
-
-	SepiaFilter<<<gridDim, blockDim, 0, hipStreamDefault>>>(d_inImage, d_outImage, pixels, originalImage->GetComponents(), k);
-	HIPCheck(hipGetLastError());
-
-	HIPCheck(hipEventRecord(eventEnd, nullptr));
-	HIPCheck(hipEventSynchronize(eventEnd));
-
-	float elapsedTime;
-	HIPCheck(hipEventElapsedTime(&elapsedTime, eventStart, eventEnd));
-	profilerInfo[ProfilerTimes::KernelCompute] = elapsedTime;
-
-	std::vector<uchar> outImageData(bytes / sizeof(uchar));
-
-	HIPCheck(hipEventRecord(eventStart, nullptr));
-
-	HIPCheck(hipMemcpy(outImageData.data(), d_outImage, bytes, hipMemcpyDeviceToHost));
-
-	HIPCheck(hipEventRecord(eventEnd, nullptr));
-	HIPCheck(hipEventSynchronize(eventEnd));
-	HIPCheck(hipEventElapsedTime(&elapsedTime, eventStart, eventEnd));
-	profilerInfo[ProfilerTimes::MemCopyDeviceToHost] = elapsedTime;
-
-	HIPCheck(hipEventDestroy(eventStart));
-	HIPCheck(hipEventDestroy(eventEnd));
-	HIPCheck(hipFree(d_outImage));
-
-	return outImageData;
+	return generalKernelCompute(
+		profilerInfo,
+		d_inImage,
+		originalImage,
+		blockDim,
+		gridDim,
+		SepiaFilter,
+		k
+	);
 }
 
 std::vector<uchar> computeBoxBlur(
