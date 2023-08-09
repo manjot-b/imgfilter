@@ -27,7 +27,7 @@ std::vector<uchar> generalKernelCompute(
 		Args... args
 );
 
-std::vector<uchar> nonSeperableKernelCompute(
+std::vector<uchar> nonSeparableKernelCompute(
 		ProfilerInfo& profilerInfo,
 		const uchar* d_paddedInImage,
 		std::shared_ptr<const Image> originalImage,

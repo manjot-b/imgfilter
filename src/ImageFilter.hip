@@ -81,7 +81,7 @@ __global__ void SepiaFilter(
 }
 
 /**
- * Performs a convolution on the input image using a non-seperable filter.
+ * Performs a convolution on the input image using a non-separable filter.
  * @param paddedInImage The input image but padded with @c filterDim.x / 2 cols added to each side
  *   and @c filterDim.y / 2 rows added to the top and bottom.
  * @param outImage The image to output to.
@@ -90,7 +90,7 @@ __global__ void SepiaFilter(
  * @param filter A row-major normalized filter.
  * @param The dimensions of @c filter.
  */
-__global__ void NonSeperableConvolution(
+__global__ void NonSeparableConvolution(
 		const uchar* paddedInImage,
 		uchar* outImage,
 		uint2 originalDim,
@@ -419,7 +419,7 @@ std::vector<uchar> computeSepia(
 	);
 }
 
-std::vector<uchar> nonSeperableKernelCompute(
+std::vector<uchar> nonSeparableKernelCompute(
 		ProfilerInfo& profilerInfo,
 		const uchar* d_paddedInImage,
 		std::shared_ptr<const Image> originalImage,
@@ -443,7 +443,7 @@ std::vector<uchar> nonSeperableKernelCompute(
 
 	HIPCheck(hipEventRecord(eventStart, nullptr));
 
-	NonSeperableConvolution<<<gridDim, blockDim, 0, hipStreamDefault>>>(
+	NonSeparableConvolution<<<gridDim, blockDim, 0, hipStreamDefault>>>(
 			d_paddedInImage,
 			d_outImage,
 			uint2(originalImage->GetWidth(), originalImage->GetHeight()),
@@ -495,7 +495,7 @@ std::vector<uchar> computeBoxBlur(
 	HIPCheck(hipMalloc(&d_filter, sizeof(float) * filterSize));
 	HIPCheck(hipMemcpy(d_filter, filter.data(), sizeof(float) * filterSize, hipMemcpyHostToDevice));
 
-	std::vector<uchar> outImageData = nonSeperableKernelCompute(
+	std::vector<uchar> outImageData = nonSeparableKernelCompute(
 		profilerInfo,
 		d_paddedInImage,
 		originalImage,
@@ -527,7 +527,7 @@ std::vector<uchar> computeGaussianBlur(
 	HIPCheck(hipMalloc(&d_filter, sizeof(float) * filterSize));
 	HIPCheck(hipMemcpy(d_filter, gausFilter.data(), sizeof(float) * filterSize, hipMemcpyHostToDevice));
 
-	std::vector<uchar> outImageData = nonSeperableKernelCompute(
+	std::vector<uchar> outImageData = nonSeparableKernelCompute(
 		profilerInfo,
 		d_paddedInImage,
 		originalImage,
