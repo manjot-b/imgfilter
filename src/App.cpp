@@ -36,6 +36,8 @@ void App::Run()
 
 		if (m_filterParams != m_prevfilterParams)
 		{
+			// TODO: Run this function asynchronously. Push the filter params onto a queue
+			// that is processed in another thread.
 			ComputeAndDisplayFilteredImages();
 			m_prevfilterParams = m_filterParams;
 		}
