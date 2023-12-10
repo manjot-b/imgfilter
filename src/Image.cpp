@@ -30,7 +30,7 @@ Image::Image(const std::string& filename, std::vector<uchar>&& imageData, int wi
 	m_components(components),
 	m_textureID(0)
 {
-	assert(m_imageData.size() == m_width * m_height * m_components);
+	assert(m_imageData.size() == size_t(m_width) * size_t(m_height) * size_t(m_components));
 	createOpenGLTexture();
 }
 

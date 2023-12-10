@@ -1,11 +1,25 @@
 cmake_minimum_required(VERSION 3.21)
-project(imgfilter LANGUAGES HIP)
+
+# Compute backend settings
+if(NOT DEFINED COMPUTE_BACKEND)
+	set(COMPUTE_BACKEND "ROCM")
+endif()
+
+string(TOUPPER ${COMPUTE_BACKEND} COMPUTE_BACKEND)
+if(COMPUTE_BACKEND STREQUAL "ROCM")
+	message("ROCM backend. Enable HIP.")
+	enable_language(HIP) # must be enabled before project() command
+endif()
+
+project(imgfilter)
 
 set(CMAKE_CXX_STANDARD 17)
 add_executable(${CMAKE_PROJECT_NAME} "")
-enable_language(CXX)
 
-target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE -Wall -Werror -Wno-pragma-once-outside-header)
+target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE -Wall -Werror)
+if(COMPUTE_BACKEND STREQUAL "ROCM")
+	target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE -Wno-pragma-once-outside-header)
+endif()
 
 set(SOURCE_DIR "src")
 add_subdirectory(${SOURCE_DIR})

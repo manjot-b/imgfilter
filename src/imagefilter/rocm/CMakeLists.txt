@@ -1,3 +1,3 @@
-target_sources(${CMAKE_PROJECT_NAME} PRIVATE
-	ImageFilter.hip
-)
+set(HIP_SOURCE_FILES ImageFilter.hip)
+
+target_sources(${CMAKE_PROJECT_NAME} PRIVATE ${HIP_SOURCE_FILES})

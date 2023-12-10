@@ -1,0 +1,35 @@
+{
+	"version": 3,
+	"cmakeMinimumRequired": {
+		"major": 3,
+		"minor": 21,
+		"patch": 0
+	},	
+	"configurePresets": [
+		{
+			"name": "ninja",
+			"generator": "Ninja",
+			"hidden": true
+		},
+		{
+			"name": "ninja-rocm-debug",
+			"binaryDir": "${sourceDir}/build/ninja-rocm-debug",
+			"inherits": "ninja",
+			"cacheVariables": {
+				"COMPUTE_BACKEND": "ROCM",
+				"CMAKE_BUILD_TYPE": "DEBUG",
+				"CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+			}
+		},
+		{
+			"name": "ninja-rocm-release",
+			"binaryDir": "${sourceDir}/build/ninja-rocm-release",
+			"inherits": "ninja",
+			"cacheVariables": {
+				"COMPUTE_BACKEND": "ROCM",
+				"CMAKE_BUILD_TYPE": "RELEASE",
+				"CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+			}
+		}
+	]
+}
