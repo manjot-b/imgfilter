@@ -1,8 +1,8 @@
-#include "ImageFilter.hpp"
-#include "ImageFilter_detail.hpp"
+#include "imagefilter/ImageFilter.hpp"
+#include "imagefilter/ImageFilter_detail.hpp"
 
-#include <cmath>
 #include <hip/hip_runtime.h>
+#include <iostream>
 #include <memory>
 #include <sstream>
 
@@ -167,9 +167,9 @@ std::vector<FilteredImageResult> GetFilteredImages(
 	HIPCheck(hipEventCreate(&memCopyEnd));
 
 	size_t pixels = originalImage->GetWidth() * originalImage->GetHeight();
-	size_t bytes = sizeof(uchar) * pixels * originalImage->GetComponents();
+	size_t bytes = sizeof(uint8_t) * pixels * originalImage->GetComponents();
 
-	uchar* d_inImage = nullptr;
+	uint8_t* d_inImage = nullptr;
 	HIPCheck(hipMalloc(&d_inImage, bytes));
 
 	HIPCheck(hipEventRecord(memCopyStart, nullptr));
@@ -183,11 +183,11 @@ std::vector<FilteredImageResult> GetFilteredImages(
 	HIPCheck(hipEventElapsedTime(&memCopyElapsed, memCopyStart, memCopyEnd));
 
 	constexpr unsigned int threads = 64;
-	dim3 blockDim = dim3(threads, 1, 1);
-	dim3 gridDim = dim3((pixels + threads - 1) / threads, 1, 1);	// ceiling(pixels / threads)
+	uVec3 blockDim = uVec3(threads, 1, 1);
+	uVec3 gridDim = uVec3((pixels + threads - 1) / threads, 1, 1);	// ceiling(pixels / threads)
 
 	std::vector<FilteredImageResult> filteredImages;
-	std::vector<uchar> outImageData;
+	std::vector<uint8_t> outImageData;
 	ProfilerInfo profilerInfo;
 
 	outImageData = computeGrayScale(profilerInfo, d_inImage, originalImage, blockDim, gridDim);
@@ -225,14 +225,14 @@ std::vector<FilteredImageResult> GetFilteredImages(
 	**********************************/
 
 	// Box blur
-	uint2 filterDim = {filterParams.m_boxBlur.filterDim, filterParams.m_boxBlur.filterDim};
-	uint paddedWidth, paddedHeight;
-	std::vector<uchar> paddedImageData = padRepeatEdge(originalImage, filterDim, paddedWidth, paddedHeight);
+	uVec2 filterDim = {uint32_t(filterParams.m_boxBlur.filterDim), uint32_t(filterParams.m_boxBlur.filterDim)};
+	uint32_t paddedWidth, paddedHeight;
+	std::vector<uint8_t> paddedImageData = padRepeatEdge(originalImage, filterDim, paddedWidth, paddedHeight);
 
 	pixels = paddedWidth * paddedHeight;
-	bytes = sizeof(uchar) * pixels * originalImage->GetComponents();
+	bytes = sizeof(uint8_t) * pixels * originalImage->GetComponents();
 
-	uchar* d_paddedInImage = nullptr;
+	uint8_t* d_paddedInImage = nullptr;
 	HIPCheck(hipMalloc(&d_paddedInImage, bytes));
 
 	HIPCheck(hipEventRecord(memCopyStart));
@@ -272,11 +272,11 @@ std::vector<FilteredImageResult> GetFilteredImages(
 	HIPCheck(hipFree(d_paddedInImage));
 
 	// Gaus blur
-	uint2 gausFilterDim = {filterParams.m_gausBlur.filterDim, filterParams.m_gausBlur.filterDim};
+	uVec2 gausFilterDim = {uint32_t(filterParams.m_gausBlur.filterDim), uint32_t(filterParams.m_gausBlur.filterDim)};
 	paddedImageData = padRepeatEdge(originalImage, gausFilterDim, paddedWidth, paddedHeight);
 
 	pixels = paddedWidth * paddedHeight;
-	bytes = sizeof(uchar) * pixels * originalImage->GetComponents();
+	bytes = sizeof(uint8_t) * pixels * originalImage->GetComponents();
 
 	d_paddedInImage = nullptr;
 	HIPCheck(hipMalloc(&d_paddedInImage, bytes));
@@ -324,12 +324,12 @@ std::vector<FilteredImageResult> GetFilteredImages(
 namespace detail {
 
 template <class... Args>
-std::vector<uchar> generalKernelCompute(
+std::vector<uint8_t> generalKernelCompute(
 		ProfilerInfo& profilerInfo,
-		const uchar* d_inImage,
+		const uint8_t* d_inImage,
 		std::shared_ptr<const Image> originalImage,
-		dim3 blockDim,
-		dim3 gridDim,
+		uVec3 blockDim,
+		uVec3 gridDim,
 		GeneralKernelComputeFunction<Args...> kernelComputeFunction,
 		Args... args
 )
@@ -341,14 +341,16 @@ std::vector<uchar> generalKernelCompute(
 	HIPCheck(hipEventCreate(&eventEnd));
 
 	size_t pixels = originalImage->GetWidth() * originalImage->GetHeight();
-	size_t bytes = sizeof(uchar) * pixels * originalImage->GetComponents();
+	size_t bytes = sizeof(uint8_t) * pixels * originalImage->GetComponents();
 
-	uchar* d_outImage = nullptr;
+	uint8_t* d_outImage = nullptr;
 	HIPCheck(hipMalloc(&d_outImage, bytes));
 
 	HIPCheck(hipEventRecord(eventStart, nullptr));
 
-	kernelComputeFunction<<<gridDim, blockDim, 0, hipStreamDefault>>>(
+	dim3 hipGridDim = { gridDim.x, gridDim.y, gridDim.z };
+	dim3 hipBlockDim = { blockDim.x, blockDim.y, blockDim.z };
+	kernelComputeFunction<<<hipGridDim, hipBlockDim, 0, hipStreamDefault>>>(
 			d_inImage,
 			d_outImage,
 			pixels,
@@ -363,7 +365,7 @@ std::vector<uchar> generalKernelCompute(
 	HIPCheck(hipEventElapsedTime(&elapsedTime, eventStart, eventEnd));
 	profilerInfo[ProfilerTimes::KernelCompute] = elapsedTime;
 
-	std::vector<uchar> outImageData(bytes / sizeof(uchar));
+	std::vector<uint8_t> outImageData(bytes / sizeof(uint8_t));
 
 	HIPCheck(hipEventRecord(eventStart, nullptr));
 
@@ -381,12 +383,12 @@ std::vector<uchar> generalKernelCompute(
 	return outImageData;
 }
 
-std::vector<uchar> computeGrayScale(
+std::vector<uint8_t> computeGrayScale(
 		ProfilerInfo& profilerInfo,
-		const uchar* d_inImage,
+		const uint8_t* d_inImage,
 		std::shared_ptr<const Image> originalImage,
-		dim3 blockDim,
-		dim3 gridDim
+		uVec3 blockDim,
+		uVec3 gridDim
 )
 {
 	return generalKernelCompute(
@@ -399,13 +401,13 @@ std::vector<uchar> computeGrayScale(
 	);
 }
 
-std::vector<uchar> computeSepia(
+std::vector<uint8_t> computeSepia(
 		ProfilerInfo& profilerInfo,
-		const uchar* d_inImage,
+		const uint8_t* d_inImage,
 		std::shared_ptr<const Image> originalImage,
 		float k,
-		dim3 blockDim,
-		dim3 gridDim
+		uVec3 blockDim,
+		uVec3 gridDim
 )
 {
 	return generalKernelCompute(
@@ -419,14 +421,14 @@ std::vector<uchar> computeSepia(
 	);
 }
 
-std::vector<uchar> nonSeparableKernelCompute(
+std::vector<uint8_t> nonSeparableKernelCompute(
 		ProfilerInfo& profilerInfo,
-		const uchar* d_paddedInImage,
+		const uint8_t* d_paddedInImage,
 		std::shared_ptr<const Image> originalImage,
 		const float* d_filter,
-		uint filterDim,
-		dim3 blockDim,
-		dim3 gridDim
+		uint32_t filterDim,
+		uVec3 blockDim,
+		uVec3 gridDim
 )
 {
 	profilerInfo.clear();
@@ -436,14 +438,16 @@ std::vector<uchar> nonSeparableKernelCompute(
 	HIPCheck(hipEventCreate(&eventEnd));
 
 	size_t pixels = originalImage->GetWidth() * originalImage->GetHeight();
-	size_t bytes = sizeof(uchar) * pixels * originalImage->GetComponents();
+	size_t bytes = sizeof(uint8_t) * pixels * originalImage->GetComponents();
 
-	uchar* d_outImage = nullptr;
+	uint8_t* d_outImage = nullptr;
 	HIPCheck(hipMalloc(&d_outImage, bytes));
 
 	HIPCheck(hipEventRecord(eventStart, nullptr));
 
-	NonSeparableConvolution<<<gridDim, blockDim, 0, hipStreamDefault>>>(
+	dim3 hipGridDim = { gridDim.x, gridDim.y, gridDim.z };
+	dim3 hipBlockDim = { blockDim.x, blockDim.y, blockDim.z };
+	NonSeparableConvolution<<<hipGridDim, hipBlockDim, 0, hipStreamDefault>>>(
 			d_paddedInImage,
 			d_outImage,
 			uint2(originalImage->GetWidth(), originalImage->GetHeight()),
@@ -460,7 +464,7 @@ std::vector<uchar> nonSeparableKernelCompute(
 	HIPCheck(hipEventElapsedTime(&elapsedTime, eventStart, eventEnd));
 	profilerInfo[ProfilerTimes::KernelCompute] = elapsedTime;
 
-	std::vector<uchar> outImageData(bytes / sizeof(uchar));
+	std::vector<uint8_t> outImageData(bytes / sizeof(uint8_t));
 
 	HIPCheck(hipEventRecord(eventStart, nullptr));
 
@@ -479,13 +483,13 @@ std::vector<uchar> nonSeparableKernelCompute(
 	return outImageData;
 }
 
-std::vector<uchar> computeBoxBlur(
+std::vector<uint8_t> computeBoxBlur(
 		ProfilerInfo& profilerInfo,
-		const uchar* d_paddedInImage,
+		const uint8_t* d_paddedInImage,
 		std::shared_ptr<const Image> originalImage,
-		uint filterDim,
-		dim3 blockDim,
-		dim3 gridDim
+		uint32_t filterDim,
+		uVec3 blockDim,
+		uVec3 gridDim
 )
 {
 	size_t filterSize = filterDim * filterDim;
@@ -495,7 +499,7 @@ std::vector<uchar> computeBoxBlur(
 	HIPCheck(hipMalloc(&d_filter, sizeof(float) * filterSize));
 	HIPCheck(hipMemcpy(d_filter, filter.data(), sizeof(float) * filterSize, hipMemcpyHostToDevice));
 
-	std::vector<uchar> outImageData = nonSeparableKernelCompute(
+	std::vector<uint8_t> outImageData = nonSeparableKernelCompute(
 		profilerInfo,
 		d_paddedInImage,
 		originalImage,
@@ -510,14 +514,14 @@ std::vector<uchar> computeBoxBlur(
 	return outImageData;
 }
 
-std::vector<uchar> computeGaussianBlur(
+std::vector<uint8_t> computeGaussianBlur(
 		ProfilerInfo& profilerInfo,
-		const uchar* d_paddedInImage,
+		const uint8_t* d_paddedInImage,
 		std::shared_ptr<const Image> originalImage,
 		float sigma,
-		uint filterDim,
-		dim3 blockDim,
-		dim3 gridDim
+		uint32_t filterDim,
+		uVec3 blockDim,
+		uVec3 gridDim
 )
 {
 	auto gausFilter = generateGaussianFilter(sigma, filterDim);
@@ -527,7 +531,7 @@ std::vector<uchar> computeGaussianBlur(
 	HIPCheck(hipMalloc(&d_filter, sizeof(float) * filterSize));
 	HIPCheck(hipMemcpy(d_filter, gausFilter.data(), sizeof(float) * filterSize, hipMemcpyHostToDevice));
 
-	std::vector<uchar> outImageData = nonSeparableKernelCompute(
+	std::vector<uint8_t> outImageData = nonSeparableKernelCompute(
 		profilerInfo,
 		d_paddedInImage,
 		originalImage,
@@ -552,9 +556,9 @@ std::vector<uchar> computeGaussianBlur(
  * @param[out] height The height of the padded image
  * @return The edge repeated padded image.
  */
-std::vector<uchar> padRepeatEdge(std::shared_ptr<const Image> image, uint2 filterDim, uint& width, uint& height)
+std::vector<uint8_t> padRepeatEdge(std::shared_ptr<const Image> image, uVec2 filterDim, uint32_t& width, uint32_t& height)
 {
-	std::vector<uchar> padded;
+	std::vector<uint8_t> padded;
 	width = height = 0;
 
 	// The filter must be odd else there is no center to the filter.
@@ -636,7 +640,7 @@ std::vector<uchar> padRepeatEdge(std::shared_ptr<const Image> image, uint2 filte
  * @param dim The dimension of the matrix. @note This should be odd. If not then the
  *   returned filter will be of size @c (dim + 1) x (dim + 1)
  */
-std::vector<float> generateGaussianFilter(float sigma, uint dim)
+std::vector<float> generateGaussianFilter(float sigma, uint32_t dim)
 {
 	std::vector<float> filter;
 

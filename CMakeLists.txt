@@ -9,6 +9,7 @@ target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE -Wall -Werror -Wno-pragma-o
 
 set(SOURCE_DIR "src")
 add_subdirectory(${SOURCE_DIR})
+target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${SOURCE_DIR})
 
 set(DEPENDENCIES_DIR "deps")
 add_subdirectory(${DEPENDENCIES_DIR})

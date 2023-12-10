@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "Image.hpp"
-#include "ImageFilter.hpp"
+#include "imagefilter/ImageFilter.hpp"
 
 class PreviewWindow : public IWindow
 {

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <hip/hip_runtime.h>
-
 struct FilterParams
 {
 	struct Sepia

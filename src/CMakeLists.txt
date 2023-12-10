@@ -8,9 +8,6 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
 	FilterParamsWindow.hpp
 	Image.cpp
 	Image.hpp
-	ImageFilter.hip
-	ImageFilter.hpp
-	ImageFilter_detail.hpp
 	IWindow.hpp
 	MainWindow.cpp
 	MainWindow.hpp
@@ -21,3 +18,5 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
 	ProfilerWindow.cpp
 	ProfilerWindow.hpp
 )
+
+add_subdirectory(imagefilter)

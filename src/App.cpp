@@ -3,7 +3,6 @@
 #include <filesystem>
 #include <iostream>
 
-#include "ImageFilter.hpp"
 #include "PreviewWindow.hpp"
 
 App::App() : m_mainWindow(MainWindow::Get()), m_lastSelectedThumbnailFilter(ImageFilter::Filter::None)

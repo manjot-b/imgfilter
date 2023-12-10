@@ -1,7 +1,5 @@
 #include "PreviewWindow.hpp"
 
-#include "ImageFilter.hpp"
-
 PreviewWindow::PreviewWindow() :
 	IWindow("Preview"),
 	m_maxThumbnailWidth(96),

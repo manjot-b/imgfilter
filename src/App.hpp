@@ -5,7 +5,7 @@
 
 #include "FilterParams.hpp"
 #include "Image.hpp"
-#include "ImageFilter.hpp"
+#include "imagefilter/ImageFilter.hpp"
 #include "MainWindow.hpp"
 
 class App
