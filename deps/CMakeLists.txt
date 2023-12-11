@@ -29,3 +29,6 @@ set_target_properties(imgui PROPERTIES LINKER_LANGUAGE CXX)
 target_include_directories(imgui PRIVATE "imgui" "imgui/backends" "glfw/include")
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE "imgui" "imgui/backends")
 target_link_libraries(${CMAKE_PROJECT_NAME} imgui)
+
+add_custom_command(TARGET imgui POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/imgui/misc/fonts" "${CMAKE_BINARY_DIR}/fonts")

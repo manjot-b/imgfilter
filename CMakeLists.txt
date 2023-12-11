@@ -33,5 +33,5 @@ get_target_property(SOURCE_FILES ${CMAKE_PROJECT_NAME} SOURCES)
 set_source_files_properties(${SOURCE_FILES} PROPERTIES LANGUAGE HIP)
 
 set(IMGS_DIR "imgs")
-add_custom_target(link_images ALL
-	COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_SOURCE_DIR}/${IMGS_DIR} ${CMAKE_BINARY_DIR}/${IMGS_DIR})
+add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/${IMGS_DIR} ${CMAKE_BINARY_DIR}/${IMGS_DIR})

@@ -47,6 +47,7 @@ MainWindow::MainWindow() :
 		std::cerr << "Error: Could not create GLFW window\n";
 		exit(1);
 	}
+	glfwSetWindowUserPointer(m_window, this);
 
 	glfwMakeContextCurrent(m_window);
 	glfwSwapInterval(1);
@@ -62,6 +63,16 @@ MainWindow::MainWindow() :
 
 	ImGui_ImplGlfw_InitForOpenGL(m_window, true);
 	ImGui_ImplOpenGL3_Init("#version 330");
+
+	// Handle DPI changes
+	float xScale, yScale;
+	glfwGetWindowContentScale(m_window, &xScale, &yScale);
+	onWindowContentScale(m_window, xScale, yScale);
+	glfwSetWindowContentScaleCallback(m_window, &MainWindow::onWindowContentScale);
+
+	int width, height;
+	glfwGetWindowSize(m_window, &width, &height);
+	glfwSetWindowMonitor(m_window, nullptr, 0, 0, width * xScale, height * yScale , 0);
 }
 
 void MainWindow::Close()
@@ -186,3 +197,14 @@ std::shared_ptr<PreviewWindow> MainWindow::GetPreviewWindow() { return m_preview
 
 std::shared_ptr<ProfilerWindow> MainWindow::GetProfilerWindow() { return m_profilerWindow; }
 
+void MainWindow::onWindowContentScale(GLFWwindow* window, float xScale, float yScale)
+{
+	MainWindow* mainWindow = static_cast<MainWindow*>(glfwGetWindowUserPointer(window));
+	mainWindow->m_previewWindow->OnWindowScale(xScale);
+
+	ImGuiStyle& style = ImGui::GetStyle();
+	style.ScaleAllSizes(xScale);
+
+	ImGuiIO& io = ImGui::GetIO();
+	io.Fonts->AddFontFromFileTTF("fonts/Roboto-Medium.ttf", 14 * xScale);
+}

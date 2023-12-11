@@ -33,9 +33,13 @@ class PreviewWindow : public IWindow
 		using ThumbnailSelectFunction = std::function<void(const Thumbnail& thumbnail, ImageFilter::Filter filter)>;
 		void AddThumbnailSelectCallback(ThumbnailSelectFunction callback);
 
+		void OnWindowScale(float scale);
+
 	private:
 		int m_maxThumbnailWidth;
 		int m_maxThumbnailHeight;
+		float m_scale;
+
 		std::map<ImageFilter::Filter, Thumbnail> m_thumbnails;
 		std::vector<ThumbnailSelectFunction> m_thumbnailSelectCallbacks;
 

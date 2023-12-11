@@ -43,4 +43,5 @@ class MainWindow : public IWindow
 		std::shared_ptr<Image> m_originalImage;
 
 		void displayDockingSpace();
+		static void onWindowContentScale(GLFWwindow* window, float xScale, float yScale);
 };

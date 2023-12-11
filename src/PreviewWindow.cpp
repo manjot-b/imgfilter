@@ -3,7 +3,8 @@
 PreviewWindow::PreviewWindow() :
 	IWindow("Preview"),
 	m_maxThumbnailWidth(96),
-	m_maxThumbnailHeight(96)
+	m_maxThumbnailHeight(96),
+	m_scale(1.f)
 {}
 
 void PreviewWindow::Render(FilterParams& filterParams)
@@ -11,7 +12,7 @@ void PreviewWindow::Render(FilterParams& filterParams)
 	ImGuiWindowFlags windowFlags = ImGuiWindowFlags_None;
 	ImGui::Begin(m_windowName.c_str(), nullptr, windowFlags);
 
-	ImVec2 cellPadding(8, 8);
+	ImVec2 cellPadding(10 * m_scale, 10 * m_scale);
 	int columnWidth = m_maxThumbnailWidth + cellPadding.x;
 	int columns = ImGui::GetContentRegionAvail().x / columnWidth;
 	if (columns <= 0) { columns = 1; }
@@ -96,3 +97,5 @@ void PreviewWindow::notifyThumbnailSelect(const Thumbnail& thumbnail, ImageFilte
 		callback(thumbnail, filter);
 	}
 }
+
+void PreviewWindow::OnWindowScale(float scale) { m_scale = scale; };
